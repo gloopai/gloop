@@ -1,5 +1,10 @@
 package site
 
+import (
+	"fmt"
+	"net/http"
+)
+
 type SiteServer struct {
 	Debug   bool
 	BaseURL string
@@ -17,5 +22,5 @@ func NewSiteServer(configPath string) *SiteServer {
 }
 
 func (s *SiteServer) Start() {
-
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", 9999), nil)
 }
