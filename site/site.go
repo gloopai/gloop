@@ -41,7 +41,7 @@ func (s *Site) Start() error {
 	}
 
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		s.serveStaticFiles(s.Config.BaseRoot, w, r)
+		s.serveStaticFiles(w, r)
 	})
 
 	server := &http.Server{
@@ -81,9 +81,9 @@ func (s *Site) Start() error {
 	return nil
 }
 
-// serveStaticFiles serves static files from the specified directory.
-func (s *Site) serveStaticFiles(domain string, w http.ResponseWriter, r *http.Request) {
-	requestedPath := filepath.Join(s.Config.BaseRoot, domain)
+// 处理静态文件
+func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
+	requestedPath := filepath.Join(s.Config.BaseRoot)
 
 	if _, err := os.Stat(requestedPath); err == nil {
 		http.ServeFile(w, r, requestedPath)
