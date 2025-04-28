@@ -102,8 +102,16 @@ func (s *Site) serveStaticFiles(domain string, w http.ResponseWriter, r *http.Re
 	http.ServeFile(w, r, filePath)
 }
 
-// Update RegisterRoute to use the Site-level mux
-func (s *Site) RegisterRoute(pattern string, handlerFunc http.HandlerFunc) {
+// 注册一个普通路由
+func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
+	s.mux.HandleFunc(pattern, handlerFunc)
+}
+
+/* 注册一个 token 验证的路由 */
+func (s *Site) AddTokenRoute(pattern string, handlerFunc http.HandlerFunc) {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
