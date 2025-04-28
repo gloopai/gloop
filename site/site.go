@@ -10,7 +10,6 @@ import (
 
 // Site represents a web server with configurable domains and settings.
 type Site struct {
-	Domains    []string       // List of domains the site serves
 	Config     SiteConfig     // Configuration for the site
 	mux        *http.ServeMux // HTTP request multiplexer
 	JWTManager *JWTManager    // JWT manager for token handling
@@ -18,18 +17,18 @@ type Site struct {
 
 // SiteConfig holds the configuration for the Site.
 type SiteConfig struct {
-	Port       int        `json:"port"`        // Port to run the server on
-	TLSCert    string     `json:"tls_cert"`    // Path to the TLS certificate
-	TLSKey     string     `json:"tls_key"`     // Path to the TLS key
-	UseHTTPS   bool       `json:"use_https"`   // Whether to use HTTPS
+	Port     int    `json:"port"`      // Port to run the server on
+	TLSCert  string `json:"tls_cert"`  // Path to the TLS certificate
+	TLSKey   string `json:"tls_key"`   // Path to the TLS key
+	UseHTTPS bool   `json:"use_https"` // Whether to use HTTPS
+
 	BaseRoot   string     `json:"base_root"`   // Base directory for static files
 	JWTOptions JWTOptions `json:"jwt_options"` // Secret key for JWT
 }
 
-func NewSite(config SiteConfig, domains []string) *Site {
+func NewSite(config SiteConfig) *Site {
 	site := &Site{
-		Domains: domains,
-		Config:  config,
+		Config: config,
 	}
 	site.JWTManager = NewJWTManager(config.JWTOptions)
 	return site
@@ -41,12 +40,9 @@ func (s *Site) Start() error {
 		s.mux = http.NewServeMux()
 	}
 
-	// Map each domain to its corresponding static HTML folder
-	for _, domain := range s.Domains {
-		s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			s.serveStaticFiles(domain, w, r)
-		})
-	}
+	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		s.serveStaticFiles(s.Config.BaseRoot, w, r)
+	})
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.Config.Port),
@@ -67,14 +63,14 @@ func (s *Site) Start() error {
 			Certificates: []tls.Certificate{cert},
 		}
 
-		fmt.Printf("Starting HTTPS server on port %d for domains: %v\n", s.Config.Port, s.Domains)
+		fmt.Printf("Starting HTTPS server on port %d \n", s.Config.Port)
 		go func() {
 			if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 				fmt.Printf("HTTPS server error: %v\n", err)
 			}
 		}()
 	} else {
-		fmt.Printf("Starting HTTP server on port %d for domains: %v\n", s.Config.Port, s.Domains)
+		fmt.Printf("Starting HTTP server on port %d \n", s.Config.Port)
 		go func() {
 			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				fmt.Printf("HTTP server error: %v\n", err)

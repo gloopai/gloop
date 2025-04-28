@@ -22,9 +22,7 @@ func main() {
 		},
 	}
 
-	domains := []string{"localhost:8080"}
-
-	site := site.NewSite(config, domains)
+	site := site.NewSite(config)
 	if err := site.Start(); err != nil {
 		fmt.Println("Error starting site:", err)
 	}
