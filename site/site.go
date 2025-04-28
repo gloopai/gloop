@@ -111,9 +111,9 @@ func (s *Site) Start() error {
 func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
 	config := StaticFileHandlerConfig{
 		TTL:            s.Config.StaticFileCacheTTL,
-		EmbedFS:        s.Config.EmbedFiles,
 		BaseRoot:       s.Config.BaseRoot,
 		UseEmbed:       s.Config.UseEmbed,
+		EmbedFS:        s.Config.EmbedFiles,
 		ForceIndexHTML: s.Config.ForceIndexHTML,
 	}
 	staticFileHandler := NewStaticFileHandler(config)

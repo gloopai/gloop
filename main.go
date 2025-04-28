@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"time"
@@ -8,15 +9,20 @@ import (
 	"github.com/gloopai/gloop/site"
 )
 
+//go:embed static/*
+var manageStatic embed.FS
+
 func main() {
 	// Example usage
 	config := site.SiteConfig{
-		Port:     8080,
-		TLSCert:  "path/to/cert.pem",
-		TLSKey:   "path/to/key.pem",
-		UseHTTPS: false,
-		BaseRoot: "static",
-		UseEmbed: false,
+		Port:           8080,
+		TLSCert:        "path/to/cert.pem",
+		TLSKey:         "path/to/key.pem",
+		UseHTTPS:       false,
+		BaseRoot:       "static",
+		UseEmbed:       true,
+		EmbedFiles:     manageStatic,
+		ForceIndexHTML: true,
 		JWTOptions: site.JWTOptions{
 			SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
 			TokenDuration: time.Hour * 24 * 365, // 365 days
