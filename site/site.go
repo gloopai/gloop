@@ -8,18 +8,20 @@ import (
 	"path/filepath"
 )
 
+// Site represents a web server with configurable domains and settings.
 type Site struct {
-	Domains []string
-	Config  SiteConfig
-	mux     *http.ServeMux
+	Domains []string       // List of domains the site serves
+	Config  SiteConfig     // Configuration for the site
+	mux     *http.ServeMux // HTTP request multiplexer
 }
 
+// SiteConfig holds the configuration for the Site.
 type SiteConfig struct {
-	Port     int    `json:"port"`
-	TLSCert  string `json:"tls_cert"`
-	TLSKey   string `json:"tls_key"`
-	UseHTTPS bool   `json:"use_https"`
-	BaseRoot string `json:"base_root"`
+	Port     int    `json:"port"`      // Port to run the server on
+	TLSCert  string `json:"tls_cert"`  // Path to the TLS certificate
+	TLSKey   string `json:"tls_key"`   // Path to the TLS key
+	UseHTTPS bool   `json:"use_https"` // Whether to use HTTPS
+	BaseRoot string `json:"base_root"` // Base directory for static files
 }
 
 func NewSite(config SiteConfig, domains []string) *Site {
@@ -49,12 +51,12 @@ func (s *Site) Start() error {
 
 	if s.Config.UseHTTPS {
 		if s.Config.TLSCert == "" || s.Config.TLSKey == "" {
-			return fmt.Errorf("TLS certificate and key must be provided for HTTPS")
+			return fmt.Errorf("TLS certificate and key must be provided for HTTPS (Port: %d)", s.Config.Port)
 		}
 
 		cert, err := tls.LoadX509KeyPair(s.Config.TLSCert, s.Config.TLSKey)
 		if err != nil {
-			return fmt.Errorf("failed to load TLS certificate and key: %v", err)
+			return fmt.Errorf("failed to load TLS certificate and key (Cert: %s, Key: %s): %v", s.Config.TLSCert, s.Config.TLSKey, err)
 		}
 
 		server.TLSConfig = &tls.Config{
@@ -79,7 +81,7 @@ func (s *Site) Start() error {
 	return nil
 }
 
-// serveStaticFiles serves static files from the specified directory
+// serveStaticFiles serves static files from the specified directory.
 func (s *Site) serveStaticFiles(domain string, w http.ResponseWriter, r *http.Request) {
 	requestedPath := filepath.Join(s.Config.BaseRoot, domain)
 
