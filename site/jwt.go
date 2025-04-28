@@ -1,7 +1,6 @@
 package site
 
 import (
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -12,43 +11,53 @@ type JWTManager struct {
 	tokenDuration time.Duration
 }
 
-func NewJWTManager(secretKey string, tokenDuration time.Duration) *JWTManager {
+type AuthJwtClaims struct {
+	UserId   int64  `json:"user_id"`
+	UserName string `json:"username"`
+	jwt.StandardClaims
+}
+
+type JWTOptions struct {
+	SecretKey     string        `json:"secret_key"`     // Secret key for signing JWT tokens
+	TokenDuration time.Duration `json:"token_duration"` // Duration for which the token is valid
+}
+
+func NewJWTManager(opt JWTOptions) *JWTManager {
 	return &JWTManager{
-		secretKey:     secretKey,
-		tokenDuration: tokenDuration,
+		secretKey:     opt.SecretKey,
+		tokenDuration: opt.TokenDuration,
 	}
 }
 
-func (j *JWTManager) GenerateToken(username string) (string, error) {
-	claims := jwt.MapClaims{
-		"username": username,
-		"exp":      time.Now().Add(j.tokenDuration).Unix(),
+func (j *JWTManager) GenerateToken(auth RequestAuth) (string, error) {
+	claims := AuthJwtClaims{
+		UserId:   auth.UserId,
+		UserName: auth.Username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(j.tokenDuration).Unix(),
+		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(j.secretKey))
 }
 
-func (j *JWTManager) VerifyToken(tokenString string) (string, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return []byte(j.secretKey), nil
+func (j *JWTManager) VerifyToken(tokenString string) (RequestAuth, error) {
+	claims := &AuthJwtClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return RequestAuth{}, nil
 	})
 
 	if err != nil {
-		return "", err
+		return RequestAuth{}, err
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return "", errors.New("invalid token")
+	if !token.Valid {
+		return RequestAuth{}, jwt.ErrSignatureInvalid
 	}
 
-	username, ok := claims["username"].(string)
-	if !ok {
-		return "", errors.New("invalid token claims")
-	}
-
-	return username, nil
+	return RequestAuth{
+		UserId:   claims.UserId,
+		Username: claims.UserName,
+	}, nil
 }

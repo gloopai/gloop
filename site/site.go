@@ -10,25 +10,29 @@ import (
 
 // Site represents a web server with configurable domains and settings.
 type Site struct {
-	Domains []string       // List of domains the site serves
-	Config  SiteConfig     // Configuration for the site
-	mux     *http.ServeMux // HTTP request multiplexer
+	Domains    []string       // List of domains the site serves
+	Config     SiteConfig     // Configuration for the site
+	mux        *http.ServeMux // HTTP request multiplexer
+	JWTManager *JWTManager    // JWT manager for token handling
 }
 
 // SiteConfig holds the configuration for the Site.
 type SiteConfig struct {
-	Port     int    `json:"port"`      // Port to run the server on
-	TLSCert  string `json:"tls_cert"`  // Path to the TLS certificate
-	TLSKey   string `json:"tls_key"`   // Path to the TLS key
-	UseHTTPS bool   `json:"use_https"` // Whether to use HTTPS
-	BaseRoot string `json:"base_root"` // Base directory for static files
+	Port       int        `json:"port"`        // Port to run the server on
+	TLSCert    string     `json:"tls_cert"`    // Path to the TLS certificate
+	TLSKey     string     `json:"tls_key"`     // Path to the TLS key
+	UseHTTPS   bool       `json:"use_https"`   // Whether to use HTTPS
+	BaseRoot   string     `json:"base_root"`   // Base directory for static files
+	JWTOptions JWTOptions `json:"jwt_options"` // Secret key for JWT
 }
 
 func NewSite(config SiteConfig, domains []string) *Site {
-	return &Site{
+	site := &Site{
 		Domains: domains,
 		Config:  config,
 	}
+	site.JWTManager = NewJWTManager(config.JWTOptions)
+	return site
 }
 
 // Modify the Start method to initialize the mux at the Site level
@@ -111,9 +115,55 @@ func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 }
 
 /* 注册一个 token 验证的路由 */
-func (s *Site) AddTokenRoute(pattern string, handlerFunc http.HandlerFunc) {
+func (s *Site) AddTokenRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
-	s.mux.HandleFunc(pattern, handlerFunc)
+
+	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusMethodNotAllowed,
+				Message: "Method not allowed",
+			})
+			return
+		}
+
+		// Extract JWT token from Authorization header
+		token := r.Header.Get("Authorization")
+		if token == "" {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusUnauthorized,
+				Message: "Authorization header missing",
+			})
+			return
+		}
+
+		// Verify the token
+		auth, err := s.JWTManager.VerifyToken(token)
+		if err != nil {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusUnauthorized,
+				Message: "Invalid token",
+			})
+			return
+		}
+
+		// Parse the JSON request body
+		var payload RequestPayload
+		if err := ParseJSONRequest(r, &payload); err != nil {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusBadRequest,
+				Message: "Invalid JSON payload",
+			})
+			return
+		}
+
+		payload.Auth = auth
+
+		// Call the handler function and get the response
+		response := handlerFunc(payload)
+		// Write the response as JSON
+		WriteJSONResponse(w, response)
+	})
 }

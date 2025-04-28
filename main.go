@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gloopai/gloop/site"
 )
@@ -15,6 +16,10 @@ func main() {
 		TLSKey:   "path/to/key.pem",
 		UseHTTPS: false,
 		BaseRoot: "static",
+		JWTOptions: site.JWTOptions{
+			SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
+			TokenDuration: time.Hour * 24 * 365, // 365 days
+		},
 	}
 
 	domains := []string{"localhost:8080"}
