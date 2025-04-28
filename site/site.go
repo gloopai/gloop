@@ -98,7 +98,7 @@ func (s *Site) Start() error {
 func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
 	if s.Config.UseEmbed {
 		if err := s.serveEmbeddedFile(w, r); err != nil {
-			s.Logger.Printf("嵌入文件服务错误: %v", err)
+			s.Logger.Printf("Error serving embedded file: %v", err)
 			http.NotFound(w, r)
 		}
 		return
@@ -159,7 +159,7 @@ func (s *Site) AddPayloadRoute(pattern string, handlerFunc func(payload RequestP
 		if r.Method != http.MethodPost {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusMethodNotAllowed,
-				Message: "方法不被允许",
+				Message: "Method not allowed",
 			})
 			return
 		}
@@ -169,7 +169,7 @@ func (s *Site) AddPayloadRoute(pattern string, handlerFunc func(payload RequestP
 		if err := ParseJSONRequest(r, &payload); err != nil {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusBadRequest,
-				Message: "无效的 JSON 请求体",
+				Message: "Invalid JSON payload",
 			})
 			return
 		}
@@ -200,7 +200,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload Req
 		if r.Method != http.MethodPost {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusMethodNotAllowed,
-				Message: "方法不被允许",
+				Message: "Method not allowed",
 			})
 			return
 		}
@@ -210,7 +210,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload Req
 		if token == "" {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusUnauthorized,
-				Message: "缺少 Authorization 头",
+				Message: "Missing Authorization header",
 			})
 			return
 		}
@@ -220,7 +220,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload Req
 		if err != nil {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusUnauthorized,
-				Message: "无效的 token",
+				Message: "Invalid token",
 			})
 			return
 		}
@@ -230,7 +230,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload Req
 		if err := ParseJSONRequest(r, &payload); err != nil {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusBadRequest,
-				Message: "无效的 JSON 请求体",
+				Message: "Invalid JSON payload",
 			})
 			return
 		}
