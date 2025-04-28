@@ -11,6 +11,7 @@ import (
 type Site struct {
 	Domains []string
 	Config  SiteConfig
+	mux     *http.ServeMux
 }
 
 type SiteConfig struct {
@@ -28,19 +29,22 @@ func NewSite(config SiteConfig, domains []string) *Site {
 	}
 }
 
+// Modify the Start method to initialize the mux at the Site level
 func (s *Site) Start() error {
-	mux := http.NewServeMux()
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
 
 	// Map each domain to its corresponding static HTML folder
 	for _, domain := range s.Domains {
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			s.serveStaticFiles(domain, w, r)
 		})
 	}
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.Config.Port),
-		Handler: mux,
+		Handler: s.mux,
 	}
 
 	if s.Config.UseHTTPS {
@@ -58,11 +62,21 @@ func (s *Site) Start() error {
 		}
 
 		fmt.Printf("Starting HTTPS server on port %d for domains: %v\n", s.Config.Port, s.Domains)
-		return server.ListenAndServeTLS("", "")
+		go func() {
+			if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+				fmt.Printf("HTTPS server error: %v\n", err)
+			}
+		}()
+	} else {
+		fmt.Printf("Starting HTTP server on port %d for domains: %v\n", s.Config.Port, s.Domains)
+		go func() {
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				fmt.Printf("HTTP server error: %v\n", err)
+			}
+		}()
 	}
 
-	fmt.Printf("Starting HTTP server on port %d for domains: %v\n", s.Config.Port, s.Domains)
-	return server.ListenAndServe()
+	return nil
 }
 
 // serveStaticFiles serves static files from the specified directory
@@ -84,4 +98,12 @@ func (s *Site) serveStaticFiles(domain string, w http.ResponseWriter, r *http.Re
 	defer file.Close()
 
 	http.ServeFile(w, r, filePath)
+}
+
+// Update RegisterRoute to use the Site-level mux
+func (s *Site) RegisterRoute(pattern string, handlerFunc http.HandlerFunc) {
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
+	s.mux.HandleFunc(pattern, handlerFunc)
 }
