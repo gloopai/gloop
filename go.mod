@@ -1,3 +1,3 @@
-module gloop
+module github.com/gloopai/gloop
 
-go 1.23.3
+go 1.18
