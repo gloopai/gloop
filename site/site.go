@@ -1,16 +1,10 @@
 package site
 
 import (
-	"bytes"
 	"crypto/tls"
 	"embed"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
-	"os"
-	"path/filepath"
-	"sync"
 	"time"
 )
 
@@ -19,10 +13,9 @@ type Site struct {
 	Config     SiteConfig     // 站点配置
 	mux        *http.ServeMux // HTTP 路由器
 	JWTManager *JWTManager    // JWT 管理器
-	Logger     *log.Logger    // 日志记录器
 
 	// 在 Site 结构中添加 RouteCommandMap
-	RouteCommandMap sync.Map
+	RouteCommandMap *RouteCommandManager
 }
 
 // SiteConfig 保存 Site 的配置
@@ -41,7 +34,6 @@ type SiteConfig struct {
 func NewSite(config SiteConfig) *Site {
 	site := &Site{
 		Config: config,
-		Logger: log.New(os.Stdout, "[Site] ", log.LstdFlags),
 	}
 	// token 默认值
 	if config.JWTOptions.Authorization == "" {
@@ -50,7 +42,7 @@ func NewSite(config SiteConfig) *Site {
 	site.JWTManager = NewJWTManager(config.JWTOptions)
 
 	// 初始化 RouteCommandMap
-	site.RouteCommandMap = sync.Map{}
+	site.RouteCommandMap = NewRouteCommandManager()
 	return site
 }
 
@@ -64,9 +56,13 @@ func (s *Site) Start() error {
 		s.serveStaticFiles(w, r)
 	})
 
+	// 优化 HTTP 服务器配置
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", s.Config.Port),
-		Handler: s.mux,
+		Addr:           fmt.Sprintf(":%d", s.Config.Port),
+		Handler:        s.mux,
+		ReadTimeout:    10 * time.Second, // 限制读取超时时间
+		WriteTimeout:   10 * time.Second, // 限制写入超时时间
+		MaxHeaderBytes: 1 << 20,          // 限制请求头大小为 1MB
 	}
 
 	if s.Config.UseHTTPS {
@@ -101,51 +97,11 @@ func (s *Site) Start() error {
 	return nil
 }
 
-// 处理静态文件
+// 替换 serveStaticFiles 调用为使用 StaticFileHandler
 func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
-	if s.Config.UseEmbed {
-		if err := s.serveEmbeddedFile(w, r); err != nil {
-			s.Logger.Printf("Error serving embedded file: %v", err)
-			http.NotFound(w, r)
-		}
-		return
-	}
-
-	// 回退到从文件系统服务文件
-	requestedPath := filepath.Join(s.Config.BaseRoot, r.URL.Path)
-	if _, err := os.Stat(requestedPath); err == nil {
-		http.ServeFile(w, r, requestedPath)
-		return
-	}
-
-	// 如果文件不存在，为 React 路由服务 index.html
-	filePath := filepath.Join(s.Config.BaseRoot, "index.html")
-	file, err := os.Open(filePath)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	defer file.Close()
-
-	http.ServeFile(w, r, filePath)
-}
-
-// 服务嵌入文件
-func (s *Site) serveEmbeddedFile(w http.ResponseWriter, r *http.Request) error {
-	requestedPath := filepath.Join(s.Config.BaseRoot, r.URL.Path)
-	file, err := s.Config.EmbedFiles.Open(requestedPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	http.ServeContent(w, r, requestedPath, time.Now(), bytes.NewReader(content))
-	return nil
+	staticFileHandler := NewStaticFileHandler(10*time.Minute, s.Config.EmbedFiles, s.Config.UseEmbed)
+	staticFileHandler.StartCacheCleaner()
+	staticFileHandler.ServeStaticFile(w, r, s.Config.BaseRoot)
 }
 
 // 注册一个普通路由
@@ -200,7 +156,7 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 	// 根据 Command 执行对应的处理函数
 	key := fmt.Sprintf("%s:%s", pattern, payload.Command)
 	if handler, ok := s.RouteCommandMap.Load(key); ok {
-		response := handler.(func(*RequestPayload) ResponsePayload)(&payload)
+		response := handler(&payload)
 		WriteJSONResponse(w, response)
 		return
 	}
