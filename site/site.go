@@ -17,11 +17,10 @@ type Site struct {
 
 // SiteConfig holds the configuration for the Site.
 type SiteConfig struct {
-	Port     int    `json:"port"`      // Port to run the server on
-	TLSCert  string `json:"tls_cert"`  // Path to the TLS certificate
-	TLSKey   string `json:"tls_key"`   // Path to the TLS key
-	UseHTTPS bool   `json:"use_https"` // Whether to use HTTPS
-
+	Port       int        `json:"port"`        // Port to run the server on
+	TLSCert    string     `json:"tls_cert"`    // Path to the TLS certificate
+	TLSKey     string     `json:"tls_key"`     // Path to the TLS key
+	UseHTTPS   bool       `json:"use_https"`   // Whether to use HTTPS
 	BaseRoot   string     `json:"base_root"`   // Base directory for static files
 	JWTOptions JWTOptions `json:"jwt_options"` // Secret key for JWT
 }
@@ -29,6 +28,10 @@ type SiteConfig struct {
 func NewSite(config SiteConfig) *Site {
 	site := &Site{
 		Config: config,
+	}
+	// token 默认值
+	if config.JWTOptions.Authorization == "" {
+		config.JWTOptions.Authorization = "Authorization"
 	}
 	site.JWTManager = NewJWTManager(config.JWTOptions)
 	return site

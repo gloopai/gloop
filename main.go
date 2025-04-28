@@ -22,22 +22,30 @@ func main() {
 		},
 	}
 
-	site := site.NewSite(config)
-	if err := site.Start(); err != nil {
+	mysite := site.NewSite(config)
+	if err := mysite.Start(); err != nil {
 		fmt.Println("Error starting site:", err)
 	}
 
-	site.AddRoute("/example", func(w http.ResponseWriter, r *http.Request) {
+	mysite.AddRoute("/example", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello, this is an example route!")
 
 	})
 
 	// Register a new route to output a JSON response
-	site.AddRoute("/json", func(w http.ResponseWriter, r *http.Request) {
+	mysite.AddRoute("/json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "This is a JSON response"}`))
 	})
+
+	mysite.AddTokenPayloadRoute("/token", func(playload site.RequestPayload) site.ResponsePayload {
+		// Example response payload
+		return site.ResponsePayload{
+			Message: "Token payload processed successfully",
+		}
+	})
+	// Example token payload
 
 	for {
 	}

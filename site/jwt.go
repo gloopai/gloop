@@ -19,6 +19,7 @@ type AuthJwtClaims struct {
 
 type JWTOptions struct {
 	SecretKey     string        `json:"secret_key"`     // Secret key for signing JWT tokens
+	Authorization string        `json:"authorization"`  // Authorization header name
 	TokenDuration time.Duration `json:"token_duration"` // Duration for which the token is valid
 }
 
