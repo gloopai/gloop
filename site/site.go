@@ -169,36 +169,7 @@ func (s *Site) AddPayloadRoute(pattern string) {
 	}
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			WriteJSONResponse(w, ResponsePayload{
-				Code:    http.StatusMethodNotAllowed,
-				Message: "Method not allowed",
-			})
-			return
-		}
-
-		// 解析 JSON 请求体
-		var payload RequestPayload
-		if err := ParseJSONRequest(r, &payload); err != nil {
-			WriteJSONResponse(w, ResponsePayload{
-				Code:    http.StatusBadRequest,
-				Message: "Invalid JSON payload",
-			})
-			return
-		}
-
-		// 根据 Command 执行对应的处理函数
-		key := fmt.Sprintf("%s:%s", pattern, payload.Command)
-		if handler, ok := s.RouteCommandMap.Load(key); ok {
-			response := handler.(func(*RequestPayload) ResponsePayload)(&payload)
-			WriteJSONResponse(w, response)
-			return
-		}
-
-		WriteJSONResponse(w, ResponsePayload{
-			Code:    http.StatusNotFound,
-			Message: "Command not found",
-		})
+		s.handlePayloadRequest(w, r, pattern, nil)
 	})
 }
 
