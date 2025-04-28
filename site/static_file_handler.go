@@ -15,26 +15,40 @@ import (
 // 添加对嵌入文件的支持
 
 type StaticFileHandler struct {
-	cache      sync.Map
-	cacheMutex sync.Mutex
-	cacheTTL   time.Duration
-	embedFS    embed.FS
-	useEmbed   bool
+	cache          sync.Map
+	cacheMutex     sync.Mutex
+	cacheTTL       time.Duration
+	embedFS        embed.FS
+	BaseRoot       string
+	useEmbed       bool
+	forceIndexHTML bool
+}
+
+type StaticFileHandlerConfig struct {
+	TTL            time.Duration
+	EmbedFS        embed.FS
+	BaseRoot       string
+	UseEmbed       bool
+	ForceIndexHTML bool
 }
 
 // NewStaticFileHandler 创建一个新的静态文件处理器
-func NewStaticFileHandler(ttl time.Duration, embedFS embed.FS, useEmbed bool) *StaticFileHandler {
+func NewStaticFileHandler(config StaticFileHandlerConfig) *StaticFileHandler {
 	return &StaticFileHandler{
-		cacheTTL: ttl,
-		embedFS:  embedFS,
-		useEmbed: useEmbed,
+		cacheTTL:       config.TTL,
+		embedFS:        config.EmbedFS,
+		BaseRoot:       config.BaseRoot,
+		useEmbed:       config.UseEmbed,
+		forceIndexHTML: config.ForceIndexHTML,
 	}
 }
 
 // ServeStaticFile 提供静态文件服务
-func (h *StaticFileHandler) ServeStaticFile(w http.ResponseWriter, r *http.Request, baseRoot string) {
-	requestedPath := filepath.Join(baseRoot, r.URL.Path)
-
+func (h *StaticFileHandler) ServeStaticFile(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		r.URL.Path = "/index.html"
+	}
+	requestedPath := filepath.Join(h.BaseRoot, r.URL.Path)
 	// 检查缓存
 	if cachedContent, ok := h.cache.Load(requestedPath); ok {
 		if content, valid := cachedContent.(cachedFile); valid && time.Since(content.timestamp) < h.cacheTTL {
@@ -45,9 +59,13 @@ func (h *StaticFileHandler) ServeStaticFile(w http.ResponseWriter, r *http.Reque
 	}
 
 	var content []byte
+	if h.forceIndexHTML {
+		requestedPath = h.BaseRoot + "/index.html"
+	}
 
 	if h.useEmbed {
 		// 从嵌入文件系统读取文件
+
 		file, err := h.embedFS.Open(requestedPath)
 		if err != nil {
 			http.NotFound(w, r)
