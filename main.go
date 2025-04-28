@@ -40,14 +40,6 @@ func main() {
 		w.Write([]byte(`{"message": "This is a JSON response"}`))
 	})
 
-	mysite.AddTokenPayloadRoute("/token", func(playload site.RequestPayload) site.ResponsePayload {
-		// Example response payload
-		return site.ResponsePayload{
-			Message: "Token payload processed successfully",
-		}
-	})
-	// Example token payload
-
 	for {
 	}
 }

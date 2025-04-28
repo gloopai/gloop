@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,9 @@ type Site struct {
 	mux        *http.ServeMux // HTTP 路由器
 	JWTManager *JWTManager    // JWT 管理器
 	Logger     *log.Logger    // 日志记录器
+
+	// 在 Site 结构中添加 RouteCommandMap
+	RouteCommandMap sync.Map
 }
 
 // SiteConfig 保存 Site 的配置
@@ -44,6 +48,9 @@ func NewSite(config SiteConfig) *Site {
 		config.JWTOptions.Authorization = "Authorization"
 	}
 	site.JWTManager = NewJWTManager(config.JWTOptions)
+
+	// 初始化 RouteCommandMap
+	site.RouteCommandMap = sync.Map{}
 	return site
 }
 
@@ -149,8 +156,14 @@ func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 	s.mux.HandleFunc(pattern, handlerFunc)
 }
 
-// 注册一个 payload 路由
-func (s *Site) AddPayloadRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
+// 修改 RegisterCommand 方法以适配 sync.Map
+func (s *Site) RegisterCommand(route string, command string, handler func(*RequestPayload) ResponsePayload) {
+	key := fmt.Sprintf("%s:%s", route, command)
+	s.RouteCommandMap.Store(key, handler)
+}
+
+// 修改 AddPayloadRoute 方法以适配 sync.Map
+func (s *Site) AddPayloadRoute(pattern string) {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
@@ -174,37 +187,66 @@ func (s *Site) AddPayloadRoute(pattern string, handlerFunc func(payload RequestP
 			return
 		}
 
-		// 调用处理函数并获取响应
-		response := handlerFunc(payload)
-		// 将响应写为 JSON
-		WriteJSONResponse(w, response)
+		// 根据 Command 执行对应的处理函数
+		key := fmt.Sprintf("%s:%s", pattern, payload.Command)
+		if handler, ok := s.RouteCommandMap.Load(key); ok {
+			response := handler.(func(*RequestPayload) ResponsePayload)(&payload)
+			WriteJSONResponse(w, response)
+			return
+		}
+
+		WriteJSONResponse(w, ResponsePayload{
+			Code:    http.StatusNotFound,
+			Message: "Command not found",
+		})
 	})
 }
 
-// 生成 JWT token
-func (s *Site) GenerateToken(auth RequestAuth) (string, error) {
-	token, err := s.JWTManager.GenerateToken(auth)
-	if err != nil {
-		return "", err
+// 提取公共逻辑到辅助函数
+func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *RequestAuth) {
+	if r.Method != http.MethodPost {
+		WriteJSONResponse(w, ResponsePayload{
+			Code:    http.StatusMethodNotAllowed,
+			Message: "Method not allowed",
+		})
+		return
 	}
-	return token, nil
+
+	// 解析 JSON 请求体
+	var payload RequestPayload
+	if err := ParseJSONRequest(r, &payload); err != nil {
+		WriteJSONResponse(w, ResponsePayload{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid JSON payload",
+		})
+		return
+	}
+
+	if auth != nil {
+		payload.Auth = *auth
+	}
+
+	// 根据 Command 执行对应的处理函数
+	key := fmt.Sprintf("%s:%s", pattern, payload.Command)
+	if handler, ok := s.RouteCommandMap.Load(key); ok {
+		response := handler.(func(*RequestPayload) ResponsePayload)(&payload)
+		WriteJSONResponse(w, response)
+		return
+	}
+
+	WriteJSONResponse(w, ResponsePayload{
+		Code:    http.StatusNotFound,
+		Message: "Command not found",
+	})
 }
 
-/* 注册一个带 token 验证的路由 */
-func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
+// 修改 AddTokenPayloadRoute 方法以使用辅助函数
+func (s *Site) AddTokenPayloadRoute(pattern string) {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			WriteJSONResponse(w, ResponsePayload{
-				Code:    http.StatusMethodNotAllowed,
-				Message: "Method not allowed",
-			})
-			return
-		}
-
 		// 从 Authorization 头中提取 JWT token
 		token := r.Header.Get("Authorization")
 		if token == "" {
@@ -225,21 +267,15 @@ func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload Req
 			return
 		}
 
-		// 解析 JSON 请求体
-		var payload RequestPayload
-		if err := ParseJSONRequest(r, &payload); err != nil {
-			WriteJSONResponse(w, ResponsePayload{
-				Code:    http.StatusBadRequest,
-				Message: "Invalid JSON payload",
-			})
-			return
-		}
-
-		payload.Auth = auth
-
-		// 调用处理函数并获取响应
-		response := handlerFunc(payload)
-		// 将响应写为 JSON
-		WriteJSONResponse(w, response)
+		s.handlePayloadRequest(w, r, pattern, &auth)
 	})
+}
+
+// 生成 JWT token
+func (s *Site) GenerateToken(auth RequestAuth) (string, error) {
+	token, err := s.JWTManager.GenerateToken(auth)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
