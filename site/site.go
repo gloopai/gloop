@@ -181,6 +181,15 @@ func (s *Site) AddPayloadRoute(pattern string, handlerFunc func(payload RequestP
 	})
 }
 
+// 生成 JWT token
+func (s *Site) GenerateToken(auth RequestAuth) (string, error) {
+	token, err := s.JWTManager.GenerateToken(auth)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 /* 注册一个带 token 验证的路由 */
 func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
 	if s.mux == nil {
