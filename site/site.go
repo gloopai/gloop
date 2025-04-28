@@ -114,8 +114,40 @@ func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 	s.mux.HandleFunc(pattern, handlerFunc)
 }
 
+// 注册一个 payload 路由
+func (s *Site) AddPayloadRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
+
+	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusMethodNotAllowed,
+				Message: "Method not allowed",
+			})
+			return
+		}
+
+		// Parse the JSON request body
+		var payload RequestPayload
+		if err := ParseJSONRequest(r, &payload); err != nil {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusBadRequest,
+				Message: "Invalid JSON payload",
+			})
+			return
+		}
+
+		// Call the handler function and get the response
+		response := handlerFunc(payload)
+		// Write the response as JSON
+		WriteJSONResponse(w, response)
+	})
+}
+
 /* 注册一个 token 验证的路由 */
-func (s *Site) AddTokenRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
+func (s *Site) AddTokenPayloadRoute(pattern string, handlerFunc func(payload RequestPayload) ResponsePayload) {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
