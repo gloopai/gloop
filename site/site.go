@@ -28,6 +28,9 @@ type SiteConfig struct {
 	JWTOptions JWTOptions `json:"jwt_options"` // JWT 选项
 	UseEmbed   bool       `json:"use_embed"`   // 是否使用嵌入文件
 	EmbedFiles embed.FS   `json:"embed_files"` // 嵌入文件系统
+
+	// 在 SiteConfig 中添加 StaticFileCacheTTL 配置项
+	StaticFileCacheTTL time.Duration `json:"static_file_cache_ttl"`
 }
 
 // 初始化日志记录器
@@ -43,6 +46,12 @@ func NewSite(config SiteConfig) *Site {
 
 	// 初始化 RouteCommandMap
 	site.RouteCommandMap = NewRouteCommandManager()
+
+	// 在 NewSite 函数中设置 StaticFileCacheTTL 的默认值
+	if config.StaticFileCacheTTL == 0 {
+		config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
+	}
+
 	return site
 }
 
@@ -99,7 +108,7 @@ func (s *Site) Start() error {
 
 // 替换 serveStaticFiles 调用为使用 StaticFileHandler
 func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
-	staticFileHandler := NewStaticFileHandler(10*time.Minute, s.Config.EmbedFiles, s.Config.UseEmbed)
+	staticFileHandler := NewStaticFileHandler(s.Config.StaticFileCacheTTL, s.Config.EmbedFiles, s.Config.UseEmbed)
 	staticFileHandler.StartCacheCleaner()
 	staticFileHandler.ServeStaticFile(w, r, s.Config.BaseRoot)
 }
