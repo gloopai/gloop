@@ -16,6 +16,7 @@ func main() {
 		TLSKey:   "path/to/key.pem",
 		UseHTTPS: false,
 		BaseRoot: "static",
+		UseEmbed: false,
 		JWTOptions: site.JWTOptions{
 			SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
 			TokenDuration: time.Hour * 24 * 365, // 365 days
