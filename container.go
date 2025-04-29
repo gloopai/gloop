@@ -11,6 +11,11 @@ func NewContainer() *Container {
 	return &Container{}
 }
 
+// Add 添加组件
+func (c *Container) Add(components ...component.Component) {
+	c.components = append(c.components, components...)
+}
+
 // Serve 启动容器
 func (c *Container) Serve() {
 	c.doInitComponents()
