@@ -6,7 +6,7 @@ type Component interface {
 	// Init 初始化组件
 	Init()
 	// Start 启动组件
-	Start()
+	Start() error
 	// Close 关闭组件
 	Close()
 	// Destroy 销毁组件
@@ -23,7 +23,7 @@ func (b *Base) Name() string { return "base" }
 func (b *Base) Init() {}
 
 // Start 启动组件
-func (b *Base) Start() {}
+func (b *Base) Start() error { return nil }
 
 // Close 关闭组件
 func (b *Base) Close() {}
