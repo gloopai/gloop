@@ -1,35 +1,32 @@
-package main
+package site
 
 import (
-	"embed"
 	"fmt"
 	"net/http"
 	"time"
-
-	"github.com/gloopai/gloop/site"
 )
 
-//go:embed static/*
-var manageStatic embed.FS
+// //go:embed static/*
+// var manageStatic embed.FS
 
-func main() {
+func StartTest() {
 	// Example usage
-	config := site.SiteConfig{
-		Port:           8080,
-		TLSCert:        "path/to/cert.pem",
-		TLSKey:         "path/to/key.pem",
-		UseHTTPS:       false,
-		BaseRoot:       "static",
-		UseEmbed:       true,
-		EmbedFiles:     manageStatic,
+	config := SiteConfig{
+		Port:     8080,
+		TLSCert:  "path/to/cert.pem",
+		TLSKey:   "path/to/key.pem",
+		UseHTTPS: false,
+		BaseRoot: "static",
+		UseEmbed: true,
+		// EmbedFiles:     manageStatic,
 		ForceIndexHTML: true,
-		JWTOptions: site.JWTOptions{
+		JWTOptions: JWTOptions{
 			SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
 			TokenDuration: time.Hour * 24 * 365, // 365 days
 		},
 	}
 
-	mysite := site.NewSite(config)
+	mysite := NewSite(config)
 	if err := mysite.Start(); err != nil {
 		fmt.Println("Error starting site:", err)
 	}
