@@ -60,7 +60,9 @@ func (h *StaticFileHandler) ServeStaticFile(w http.ResponseWriter, r *http.Reque
 
 	var content []byte
 	if h.forceIndexHTML {
-		requestedPath = h.BaseRoot + "/index.html"
+		if _, err := os.Stat(requestedPath); os.IsNotExist(err) {
+			requestedPath = filepath.Join(h.BaseRoot, "index.html")
+		}
 	}
 
 	if h.useEmbed {
