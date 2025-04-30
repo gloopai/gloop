@@ -34,9 +34,9 @@ func NewContainer(configs ...ContainerConfig) *Container {
 		}
 	}
 
-	lib.InitLogger(config.LogLevel, config.LogFormat)
+	lib.Log.InitLogger(config.LogLevel, config.LogFormat)
 	if config.Debug {
-		lib.SetLogLevel(lib.LogLevelDebug)
+		lib.Log.SetLogLevel(lib.LogLevelDebug)
 	}
 	return &Container{}
 }
