@@ -7,14 +7,37 @@ import (
 
 	"github.com/gloopai/gloop/component"
 	info "github.com/gloopai/gloop/core"
+	"github.com/gloopai/gloop/lib"
+	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
 	components []component.Component
 }
 
+type ContainerConfig struct {
+	LogLevel  lib.LogLevel
+	LogFormat lib.LogFormatter
+	Debug     bool
+}
+
 // NewContainer 创建一个容器
-func NewContainer() *Container {
+func NewContainer(configs ...ContainerConfig) *Container {
+	var config ContainerConfig
+	if len(configs) > 0 {
+		config = configs[0]
+	} else {
+		config = ContainerConfig{
+			LogLevel:  lib.LogLevelInfo,
+			LogFormat: lib.LogFormatter(&logrus.TextFormatter{}),
+			Debug:     false,
+		}
+	}
+
+	lib.InitLogger(config.LogLevel, config.LogFormat)
+	if config.Debug {
+		lib.SetLogLevel(lib.LogLevelDebug)
+	}
 	return &Container{}
 }
 
