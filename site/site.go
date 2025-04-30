@@ -2,18 +2,18 @@ package site
 
 import (
 	"crypto/tls"
-	"embed"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gloopai/gloop/component"
+	"github.com/gloopai/gloop/core"
 )
 
 // Site 代表一个具有可配置域和设置的 Web 服务器
 type Site struct {
 	component.Base
-	Config     SiteConfig     // 站点配置
+	Config     SiteOptions    // 站点配置
 	mux        *http.ServeMux // HTTP 路由器
 	JWTManager *JWTManager    // JWT 管理器
 
@@ -21,53 +21,55 @@ type Site struct {
 	RouteCommandMap *RouteCommandManager
 }
 
-// SiteConfig 保存 Site 的配置
-type SiteConfig struct {
-	Port           int        `json:"port"`             // 端口号
-	TLSCert        string     `json:"tls_cert"`         // cert 证书路径，UseHTTPS 为 true 时需要
-	TLSKey         string     `json:"tls_key"`          // key 证书路径，UseHTTPS 为 true 时需要
-	UseHTTPS       bool       `json:"use_https"`        // 是否使用 HTTPS
-	BaseRoot       string     `json:"base_root"`        // 基础目录
-	JWTOptions     JWTOptions `json:"jwt_options"`      // JWT 选项
-	UseEmbed       bool       `json:"use_embed"`        // 是否使用嵌入文件
-	EmbedFiles     embed.FS   `json:"embed_files"`      // 嵌入文件系统
-	ForceIndexHTML bool       `json:"force_index_html"` // 是否强制使用 index.html
-
-	// 在 SiteConfig 中添加 StaticFileCacheTTL 配置项
-	StaticFileCacheTTL time.Duration `json:"static_file_cache_ttl"`
-}
-
 // 初始化日志记录器
-func NewSite(config SiteConfig) *Site {
-	site := &Site{
+func NewSite(config SiteOptions) *Site {
+	return &Site{
 		Config: config,
 	}
-	// token 默认值
-	if config.JWTOptions.Authorization == "" {
-		config.JWTOptions.Authorization = "Authorization"
-	}
-	site.JWTManager = NewJWTManager(config.JWTOptions)
-
-	// 初始化 RouteCommandMap
-	site.RouteCommandMap = NewRouteCommandManager()
-
-	// 在 NewSite 函数中设置 StaticFileCacheTTL 的默认值
-	if config.StaticFileCacheTTL == 0 {
-		config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
-	}
-
-	return site
 }
 
 func (s *Site) Name() string {
 	return "site"
 }
 
-func (s *Site) Init() {}
+func (s *Site) Init() {
+	if s.Config.JWTOptions.Authorization == "" {
+		s.Config.JWTOptions.Authorization = "Authorization"
+	}
+
+	// 在 NewSite 函数中设置 StaticFileCacheTTL 的默认值
+	if s.Config.StaticFileCacheTTL == 0 {
+		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
+	}
+	s.JWTManager = NewJWTManager(s.Config.JWTOptions)
+	// 初始化 RouteCommandMap
+	s.RouteCommandMap = NewRouteCommandManager()
+	s.printInfo()
+}
 
 func (s *Site) Close() {}
 
 func (s *Site) Destory() {}
+
+// // 打印组件信息
+func (s *Site) printInfo() {
+	infos := make([]string, 0, 7)
+	infos = append(infos, fmt.Sprintf("ID: %s", s.Config.Id))
+	// infos = append(infos, fmt.Sprintf("Name: %s", s.Name()))
+	infos = append(infos, fmt.Sprintf("Port: %d", s.Config.Port))
+	infos = append(infos, fmt.Sprintf("UseEmbed: %t", s.Config.UseEmbed))
+	infos = append(infos, fmt.Sprintf("BaseRoot: %s", s.Config.BaseRoot))
+	infos = append(infos, fmt.Sprintf("UseHTTPS: %t", s.Config.UseHTTPS))
+	if s.Config.UseHTTPS {
+		infos = append(infos, fmt.Sprintf("TLSCert: %s", s.Config.TLSCert))
+		infos = append(infos, fmt.Sprintf("TLSKey: %s", s.Config.TLSKey))
+	}
+
+	infos = append(infos, fmt.Sprintf("ForceIndexHTML: %t", s.Config.ForceIndexHTML))
+	infos = append(infos, fmt.Sprintf("StaticFileCacheTTL: %s", s.Config.StaticFileCacheTTL))
+
+	core.PrintBoxInfo("Site", infos...)
+}
 
 // 修改 Start 方法以在 Site 级别初始化 mux
 func (s *Site) Start() error {
@@ -102,14 +104,12 @@ func (s *Site) Start() error {
 			Certificates: []tls.Certificate{cert},
 		}
 
-		fmt.Printf("启动 HTTPS 服务器，端口 %d \n", s.Config.Port)
 		go func() {
 			if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 				fmt.Printf("HTTPS 服务器错误: %v\n", err)
 			}
 		}()
 	} else {
-		fmt.Printf("启动 HTTP 服务器，端口 %d \n", s.Config.Port)
 		go func() {
 			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				fmt.Printf("HTTP 服务器错误: %v\n", err)

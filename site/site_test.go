@@ -11,7 +11,7 @@ import (
 
 func StartTest() {
 	// Example usage
-	config := SiteConfig{
+	config := SiteOptions{
 		Port:     8080,
 		TLSCert:  "path/to/cert.pem",
 		TLSKey:   "path/to/key.pem",
