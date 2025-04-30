@@ -35,14 +35,8 @@ func (d *DbSqlite) Init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// 将数据库连接保存到结构体中
 	d.Db = db
-
-	// _, err = db.Exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	lib.Log.Info("SQLite database initialized successfully")
 }
 
