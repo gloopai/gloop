@@ -8,6 +8,7 @@ import (
 
 	"github.com/gloopai/gloop/component"
 	"github.com/gloopai/gloop/core"
+	"github.com/gloopai/gloop/lib"
 )
 
 // Site 代表一个具有可配置域和设置的 Web 服务器
@@ -33,6 +34,10 @@ func (s *Site) Name() string {
 }
 
 func (s *Site) Init() {
+	if s.Config.Id == "" {
+		s.Config.Id = lib.Generate.Guid()
+	}
+
 	if s.Config.JWTOptions.Authorization == "" {
 		s.Config.JWTOptions.Authorization = "Authorization"
 	}
@@ -68,7 +73,7 @@ func (s *Site) printInfo() {
 	infos = append(infos, fmt.Sprintf("ForceIndexHTML: %t", s.Config.ForceIndexHTML))
 	infos = append(infos, fmt.Sprintf("StaticFileCacheTTL: %s", s.Config.StaticFileCacheTTL))
 
-	core.PrintBoxInfo("Site", infos...)
+	core.PrintBoxInfo(s.Name(), infos...)
 }
 
 // 修改 Start 方法以在 Site 级别初始化 mux
