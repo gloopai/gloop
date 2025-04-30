@@ -63,6 +63,31 @@ func (l *log) Fatal(args ...interface{}) {
 	l.logger.Fatal(args...)
 }
 
+// Infof logs a formatted info level message
+func (l *log) Infof(format string, args ...interface{}) {
+	l.logger.Infof(format, args...)
+}
+
+// Warnf logs a formatted warning level message
+func (l *log) Warnf(format string, args ...interface{}) {
+	l.logger.Warnf(format, args...)
+}
+
+// Errorf logs a formatted error level message
+func (l *log) Errorf(format string, args ...interface{}) {
+	l.logger.Errorf(format, args...)
+}
+
+// Debugf logs a formatted debug level message
+func (l *log) Debugf(format string, args ...interface{}) {
+	l.logger.Debugf(format, args...)
+}
+
+// Fatalf logs a formatted fatal level message and exits the application
+func (l *log) Fatalf(format string, args ...interface{}) {
+	l.logger.Fatalf(format, args...)
+}
+
 // LogFormatter is a custom type that wraps logrus.Formatter
 type LogFormatter logrus.Formatter
 

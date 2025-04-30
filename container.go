@@ -8,7 +8,6 @@ import (
 	"github.com/gloopai/gloop/component"
 	info "github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
-	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
@@ -22,22 +21,13 @@ type ContainerConfig struct {
 }
 
 // NewContainer 创建一个容器
-func NewContainer(configs ...ContainerConfig) *Container {
-	var config ContainerConfig
-	if len(configs) > 0 {
-		config = configs[0]
-	} else {
-		config = ContainerConfig{
-			LogLevel:  lib.LogLevelInfo,
-			LogFormat: lib.LogFormatter(&logrus.TextFormatter{}),
-			Debug:     false,
-		}
-	}
+func NewContainer(configs ContainerConfig) *Container {
+	// var config ContainerConfig
 
-	lib.Log.InitLogger(config.LogLevel, config.LogFormat)
-	if config.Debug {
-		lib.Log.SetLogLevel(lib.LogLevelDebug)
-	}
+	// lib.Log.InitLogger(config.LogLevel, config.LogFormat)
+	// if config.Debug {
+	// 	lib.Log.SetLogLevel(lib.LogLevelDebug)
+	// }
 	return &Container{}
 }
 
