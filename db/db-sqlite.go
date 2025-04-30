@@ -1,9 +1,8 @@
 package db
 
 import (
-	"database/sql"
-	"log"
-
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 
 	"github.com/gloopai/gloop/component"
@@ -13,7 +12,7 @@ import (
 type DbSqlite struct {
 	component.Base
 	Path string // 数据库路径
-	Db   *sql.DB
+	Db   *gorm.DB
 }
 
 // NewDb 创建一个新的数据库实例
@@ -31,9 +30,13 @@ func (d *DbSqlite) Name() string {
 func (d *DbSqlite) Init() {
 	lib.Log.Info("Initializing SQLite database at path:", d.Path)
 	// 初始化数据库连接
-	db, err := sql.Open("sqlite", d.Path)
+	// db, err := sql.Open("sqlite", d.Path)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	db, err := gorm.Open(sqlite.Open(d.Path), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	// 将数据库连接保存到结构体中
 	d.Db = db
@@ -42,10 +45,10 @@ func (d *DbSqlite) Init() {
 
 /*  */
 func (d *DbSqlite) Close() {
-	d.Db.Close()
+
 }
 
 // 提供一个方法来获取数据库连接
-func (d *DbSqlite) GetConnection() *sql.DB {
+func (d *DbSqlite) GetConnection() *gorm.DB {
 	return d.Db
 }
