@@ -3,7 +3,6 @@ package site
 import (
 	"fmt"
 	"net/http"
-	"time"
 )
 
 // //go:embed static/*
@@ -22,7 +21,7 @@ func StartTest() {
 		ForceIndexHTML: true,
 		JWTOptions: JWTOptions{
 			SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
-			TokenDuration: time.Hour * 24 * 365, // 365 days
+			TokenDuration: 24 * 365, // 365 days
 		},
 	}
 

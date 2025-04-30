@@ -2,7 +2,11 @@ package site
 
 import (
 	"embed"
+	"encoding/json"
+	"os"
 	"time"
+
+	"github.com/gloopai/gloop/lib"
 )
 
 // SiteConfig 保存 Site 的配置
@@ -20,4 +24,48 @@ type SiteOptions struct {
 
 	// 在 SiteConfig 中添加 StaticFileCacheTTL 配置项
 	StaticFileCacheTTL time.Duration `json:"static_file_cache_ttl"`
+}
+
+func DefaultOptions() SiteOptions {
+	return SiteOptions{
+		Id:             lib.Generate.Guid(),
+		Port:           8080,
+		TLSCert:        "",
+		TLSKey:         "",
+		UseHTTPS:       false,
+		BaseRoot:       "./",
+		JWTOptions:     JWTOptions{},
+		UseEmbed:       false,
+		EmbedFiles:     embed.FS{},
+		ForceIndexHTML: true,
+	}
+
+}
+
+/* 通过 json 读取站点配置 */
+func LoadSiteOptions(path string) SiteOptions {
+	file, err := os.Open(path)
+	if err != nil {
+		return DefaultOptions()
+	}
+	defer file.Close()
+
+	var options SiteOptions
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&options); err != nil {
+		return DefaultOptions()
+	}
+
+	return SiteOptions{
+		Id:             options.Id,
+		Port:           options.Port,
+		TLSCert:        options.TLSCert,
+		TLSKey:         options.TLSKey,
+		UseHTTPS:       options.UseHTTPS,
+		BaseRoot:       options.BaseRoot,
+		JWTOptions:     options.JWTOptions,
+		UseEmbed:       false,
+		EmbedFiles:     embed.FS{},
+		ForceIndexHTML: true,
+	}
 }
