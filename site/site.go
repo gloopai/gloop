@@ -25,7 +25,8 @@ type Site struct {
 // 初始化日志记录器
 func NewSite(config SiteOptions) *Site {
 	return &Site{
-		Config: config,
+		Config:          config,
+		RouteCommandMap: NewRouteCommandManager(),
 	}
 }
 
@@ -47,8 +48,7 @@ func (s *Site) Init() {
 		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
 	}
 	s.JWTManager = NewJWTManager(s.Config.JWTOptions)
-	// 初始化 RouteCommandMap
-	s.RouteCommandMap = NewRouteCommandManager()
+
 	s.printInfo()
 }
 
@@ -148,7 +148,7 @@ func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 }
 
 // 修改 RegisterCommand 方法以适配 sync.Map
-func (s *Site) RegisterCommand(route string, command string, handler func(*RequestPayload) ResponsePayload) {
+func (s *Site) RegisterPayloadCommand(route string, command string, handler func(*RequestPayload) ResponsePayload) {
 	key := fmt.Sprintf("%s:%s", route, command)
 	s.RouteCommandMap.Store(key, handler)
 }

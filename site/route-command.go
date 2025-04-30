@@ -17,6 +17,9 @@ func NewRouteCommandManager() *RouteCommandManager {
 
 // Store 存储一个路由命令
 func (rcm *RouteCommandManager) Store(key string, handler func(*RequestPayload) ResponsePayload) {
+	if rcm == nil {
+		panic("RouteCommandManager is nil")
+	}
 	rcm.mutex.Lock()
 	defer rcm.mutex.Unlock()
 	rcm.commands[key] = handler
