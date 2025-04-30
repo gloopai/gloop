@@ -15,19 +15,14 @@ type Container struct {
 }
 
 type ContainerConfig struct {
-	LogLevel  lib.LogLevel
-	LogFormat lib.LogFormatter
-	Debug     bool
+	LogLevel lib.LogLevel
+	Debug    bool
 }
 
 // NewContainer 创建一个容器
-func NewContainer(configs ContainerConfig) *Container {
-	// var config ContainerConfig
-
-	// lib.Log.InitLogger(config.LogLevel, config.LogFormat)
-	// if config.Debug {
-	// 	lib.Log.SetLogLevel(lib.LogLevelDebug)
-	// }
+func NewContainer(config ContainerConfig) *Container {
+	lib.Log.SetLogLevel(config.LogLevel)
+	lib.Log.SetDebugEnabled(config.Debug)
 	return &Container{}
 }
 

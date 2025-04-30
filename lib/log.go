@@ -34,8 +34,14 @@ func (l *log) SetLogLevel(level LogLevel) {
 
 // InitLogger initializes the logger with default settings
 func (l *log) InitLogger(level LogLevel, format LogFormatter) {
-	l.logger.SetLevel(logrus.Level(level))
-	l.logger.SetFormatter(logrus.Formatter(format))
+	if l.logger == nil {
+		l.logger.SetLevel(logrus.Level(level))
+	}
+
+	if format == nil {
+		format = &logrus.TextFormatter{}
+		l.logger.SetFormatter(logrus.Formatter(format))
+	}
 }
 
 // Info logs an info level message
@@ -53,8 +59,14 @@ func (l *log) Error(args ...interface{}) {
 	l.logger.Error(args...)
 }
 
+// debugEnabled controls whether debug logs are output
+var debugEnabled = true
+
 // Debug logs a debug level message
 func (l *log) Debug(args ...interface{}) {
+	if !debugEnabled {
+		return
+	}
 	l.logger.Debug(args...)
 }
 
@@ -80,6 +92,9 @@ func (l *log) Errorf(format string, args ...interface{}) {
 
 // Debugf logs a formatted debug level message
 func (l *log) Debugf(format string, args ...interface{}) {
+	if !debugEnabled {
+		return
+	}
 	l.logger.Debugf(format, args...)
 }
 
@@ -94,4 +109,9 @@ type LogFormatter logrus.Formatter
 // SetLogFormatter sets the log formatter for the logger
 func (l *log) SetLogFormatter(formatter LogFormatter) {
 	l.logger.SetFormatter(logrus.Formatter(formatter))
+}
+
+// SetDebugEnabled sets the debugEnabled flag
+func (l *log) SetDebugEnabled(enabled bool) {
+	debugEnabled = enabled
 }
