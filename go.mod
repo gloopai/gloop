@@ -5,6 +5,7 @@ go 1.23.3
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
+
 )
 
 require github.com/mattn/go-isatty v0.0.20 // indirect
