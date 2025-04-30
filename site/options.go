@@ -3,9 +3,11 @@ package site
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gloopai/gloop/lib"
 )
 
@@ -43,7 +45,7 @@ func DefaultOptions() SiteOptions {
 }
 
 /* 通过 json 读取站点配置 */
-func LoadSiteOptions(path string) SiteOptions {
+func LoadSiteJSONOptions(path string) SiteOptions {
 	file, err := os.Open(path)
 	if err != nil {
 		return DefaultOptions()
@@ -68,4 +70,56 @@ func LoadSiteOptions(path string) SiteOptions {
 		EmbedFiles:     embed.FS{},
 		ForceIndexHTML: true,
 	}
+}
+
+func LoadSiteTOMLOptions(path string) SiteOptions {
+	tomlData, err := loadFileToBytes(path)
+	if err != nil {
+		fmt.Println("Error loading file:", err)
+		return DefaultOptions()
+	}
+	var options SiteOptions
+
+	// 解析 TOML 数据
+	_, err = toml.Decode(string(tomlData), &options)
+	if err != nil {
+		fmt.Println("Error decoding TOML:", err)
+		return DefaultOptions()
+	}
+
+	return SiteOptions{
+		Id:             options.Id,
+		Port:           options.Port,
+		TLSCert:        options.TLSCert,
+		TLSKey:         options.TLSKey,
+		UseHTTPS:       options.UseHTTPS,
+		BaseRoot:       options.BaseRoot,
+		JWTOptions:     options.JWTOptions,
+		UseEmbed:       false,
+		EmbedFiles:     embed.FS{},
+		ForceIndexHTML: true,
+	}
+}
+
+func loadFileToBytes(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	fileSize := fileInfo.Size()
+	buffer := make([]byte, fileSize)
+
+	_, err = file.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer, nil
 }
