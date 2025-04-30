@@ -42,7 +42,4 @@ func StartTest() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "This is a JSON response"}`))
 	})
-
-	for {
-	}
 }
