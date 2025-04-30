@@ -1,6 +1,9 @@
 package lib
 
 import (
+	"sync"
+	"sync/atomic"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,16 +35,19 @@ func (l *log) SetLogLevel(level LogLevel) {
 	l.logger.SetLevel(logrus.Level(level))
 }
 
+// 优化了性能和线程安全性，使用了sync.Once来确保InitLogger只被初始化一次
+var initOnce sync.Once
+
 // InitLogger initializes the logger with default settings
 func (l *log) InitLogger(level LogLevel, format LogFormatter) {
-	if l.logger == nil {
+	initOnce.Do(func() {
 		l.logger.SetLevel(logrus.Level(level))
-	}
 
-	if format == nil {
-		format = &logrus.TextFormatter{}
+		if format == nil {
+			format = &logrus.TextFormatter{}
+		}
 		l.logger.SetFormatter(logrus.Formatter(format))
-	}
+	})
 }
 
 // Info logs an info level message
@@ -59,12 +65,11 @@ func (l *log) Error(args ...interface{}) {
 	l.logger.Error(args...)
 }
 
-// debugEnabled controls whether debug logs are output
-var debugEnabled = true
+var debugEnabled int32 = 1 // 1 for true, 0 for false
 
 // Debug logs a debug level message
 func (l *log) Debug(args ...interface{}) {
-	if !debugEnabled {
+	if atomic.LoadInt32(&debugEnabled) == 0 {
 		return
 	}
 	l.logger.Debug(args...)
@@ -92,7 +97,7 @@ func (l *log) Errorf(format string, args ...interface{}) {
 
 // Debugf logs a formatted debug level message
 func (l *log) Debugf(format string, args ...interface{}) {
-	if !debugEnabled {
+	if atomic.LoadInt32(&debugEnabled) == 0 {
 		return
 	}
 	l.logger.Debugf(format, args...)
@@ -113,5 +118,9 @@ func (l *log) SetLogFormatter(formatter LogFormatter) {
 
 // SetDebugEnabled sets the debugEnabled flag
 func (l *log) SetDebugEnabled(enabled bool) {
-	debugEnabled = enabled
+	if enabled {
+		atomic.StoreInt32(&debugEnabled, 1)
+	} else {
+		atomic.StoreInt32(&debugEnabled, 0)
+	}
 }
