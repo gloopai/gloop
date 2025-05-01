@@ -23,7 +23,9 @@ type User struct {
 	Email         string `gorm:"size:255" json:"email"`
 	Phone         string `gorm:"size:20" json:"phone"`
 	Nickname      string `gorm:"size:255" json:"nickname"`
-	Status        int    `gorm:"default:1" json:"status"` // 1: active, 0: inactive
+	Status        int    `gorm:"default:1" json:"status"`         // 1: active, 0: inactive
+	MFAEnabled    bool   `gorm:"default:0" json:"mfa_enabled"`    // 1: enabled, 0: disabled
+	TwoFactorCode string `gorm:"size:255" json:"two_factor_code"` // 用于存储二次验证代码
 	CreateTime    int64  `gorm:"autoCreateTime" json:"create_time"`
 	UpdateTime    int64  `gorm:"autoUpdateTime" json:"update_time"`
 	LastLoginTime int64  `gorm:"default:0" json:"last_login_time"` // 数据库中记录最后一次登录时间
