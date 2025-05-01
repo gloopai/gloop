@@ -5,13 +5,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gloopai/gloop/component"
+	"github.com/gloopai/gloop/components"
 	info "github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
 )
 
 type Container struct {
-	components []component.Component
+	components []components.Component
 }
 
 type ContainerConfig struct {
@@ -27,7 +27,7 @@ func NewContainer(config ContainerConfig) *Container {
 }
 
 // Add 添加组件
-func (c *Container) Add(components ...component.Component) {
+func (c *Container) Add(components ...components.Component) {
 	c.components = append(c.components, components...)
 }
 

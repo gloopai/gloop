@@ -1,4 +1,4 @@
-package component
+package components
 
 type Component interface {
 	// Name 组件名称

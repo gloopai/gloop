@@ -3,17 +3,16 @@ package db
 import (
 	"fmt"
 
+	"github.com/gloopai/gloop/components"
+	"github.com/gloopai/gloop/core"
+	"github.com/gloopai/gloop/lib"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
-
-	"github.com/gloopai/gloop/component"
-	"github.com/gloopai/gloop/core"
-	"github.com/gloopai/gloop/lib"
 )
 
 type DbSqlite struct {
-	component.Base
+	components.Base
 	Id   string // 数据库 ID
 	Path string // 数据库路径
 	Db   *gorm.DB
