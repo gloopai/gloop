@@ -58,3 +58,12 @@ func (d *Db) printInfo() {
 func (d *Db) GetConnection() *gorm.DB {
 	return d.Db
 }
+
+/* 数据表初始化 */
+func AutoMigrate(db *gorm.DB, model interface{}) error {
+	// Automatically migrate the schema, ensuring the table structure matches the model struct
+	if err := db.AutoMigrate(model); err != nil {
+		return fmt.Errorf("failed to migrate table: %w", err)
+	}
+	return nil
+}

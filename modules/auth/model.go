@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gloopai/gloop/lib"
+	dbmodules "github.com/gloopai/gloop/modules/db"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +18,7 @@ type User struct {
 	Email      string `gorm:"size:255" json:"email"`
 	Phone      string `gorm:"size:20" json:"phone"`
 	Nickname   string `gorm:"size:255" json:"nickname"`
+	Status     int    `gorm:"default:1" json:"status"` // 1: active, 0: inactive
 	CreateTime int64  `gorm:"autoCreateTime" json:"create_time"`
 	UpdateTime int64  `gorm:"autoUpdateTime" json:"update_time"`
 }
@@ -25,10 +27,9 @@ func (u *User) TableName() string {
 	return "gloop_auth_user"
 }
 
-/* 数据表初始化 */
 func EnsureAuthTableExists(db *gorm.DB) error {
-	if err := db.AutoMigrate(&User{}); err != nil {
-		return fmt.Errorf("failed to migrate auth table: %w", err)
+	if err := dbmodules.AutoMigrate(db, &User{}); err != nil {
+		return err
 	}
 
 	// Check if the table is empty

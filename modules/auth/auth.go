@@ -52,19 +52,17 @@ func (a *Auth) TableName() string {
 
 /* 用户注册 */
 func (a *Auth) Register(user *User) error {
-	return nil
+	return RegisterUser(a.db.Db, user.Username, user.Password, user.Email)
 }
-
-// 生成 JWT token
-// func GenerateToken(auth RequestAuth) (string, error) {
-// 	token, err := s.JWTManager.GenerateToken(auth)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return token, nil
-// }
 
 /* 用户登录 */
 func (a *Auth) Login(user *User) error {
+	loggedInUser, err := LoginUser(a.db.Db, user.Username, user.Password)
+	if err != nil {
+		return err
+	}
+
+	// Populate the user details
+	*user = *loggedInUser
 	return nil
 }
