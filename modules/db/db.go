@@ -11,7 +11,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type DbSqlite struct {
+type Db struct {
 	components.Base
 	Id   string // 数据库 ID
 	Path string // 数据库路径
@@ -19,18 +19,18 @@ type DbSqlite struct {
 }
 
 // NewDb 创建一个新的数据库实例
-func NewDbSqlite(dbpath string) *DbSqlite {
-	return &DbSqlite{
-		Path: dbpath,
+func NewDbSqlite(opt DbOptions) *Db {
+	return &Db{
+		Path: opt.DbPath,
 	}
 }
 
-func (d *DbSqlite) Name() string {
+func (d *Db) Name() string {
 	return "db"
 }
 
 // 修改 Init 方法以保存数据库连接，并提供一个方法获取连接
-func (d *DbSqlite) Init() {
+func (d *Db) Init() {
 	d.printInfo()
 
 	lib.Log.Info("Initializing SQLite database at path:", d.Path)
@@ -44,9 +44,9 @@ func (d *DbSqlite) Init() {
 }
 
 /*  */
-func (d *DbSqlite) Close() {}
+func (d *Db) Close() {}
 
-func (d *DbSqlite) printInfo() {
+func (d *Db) printInfo() {
 	infos := make([]string, 0, 2)
 	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
 	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
@@ -55,6 +55,6 @@ func (d *DbSqlite) printInfo() {
 }
 
 // 提供一个方法来获取数据库连接
-func (d *DbSqlite) GetConnection() *gorm.DB {
+func (d *Db) GetConnection() *gorm.DB {
 	return d.Db
 }
