@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -33,6 +34,7 @@ func PrintFrameworkInfo() {
 	PrintBoxInfo("",
 		fmt.Sprintf("[Website] %s", website),
 		fmt.Sprintf("[Version] %s", version),
+		fmt.Sprintf("[Run] %s", time.Now().Format("2006-01-02 15:04:05")),
 	)
 }
 

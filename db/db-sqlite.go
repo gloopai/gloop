@@ -1,16 +1,20 @@
 package db
 
 import (
+	"fmt"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 
 	"github.com/gloopai/gloop/component"
+	"github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
 )
 
 type DbSqlite struct {
 	component.Base
+	Id   string // 数据库 ID
 	Path string // 数据库路径
 	Db   *gorm.DB
 }
@@ -28,12 +32,9 @@ func (d *DbSqlite) Name() string {
 
 // 修改 Init 方法以保存数据库连接，并提供一个方法获取连接
 func (d *DbSqlite) Init() {
+	d.printInfo()
+
 	lib.Log.Info("Initializing SQLite database at path:", d.Path)
-	// 初始化数据库连接
-	// db, err := sql.Open("sqlite", d.Path)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	db, err := gorm.Open(sqlite.Open(d.Path), &gorm.Config{})
 	if err != nil {
 		return
@@ -44,8 +45,14 @@ func (d *DbSqlite) Init() {
 }
 
 /*  */
-func (d *DbSqlite) Close() {
+func (d *DbSqlite) Close() {}
 
+func (d *DbSqlite) printInfo() {
+	infos := make([]string, 0, 2)
+	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
+	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
+	infos = append(infos, fmt.Sprintf("Path: %s", d.Path))
+	core.PrintBoxInfo(d.Name(), infos...)
 }
 
 // 提供一个方法来获取数据库连接
