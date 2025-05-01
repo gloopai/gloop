@@ -15,18 +15,19 @@ const (
 )
 
 type User struct {
-	Id         int64  `gorm:"primaryKey;autoIncrement" json:"id"`
-	Username   string `gorm:"size:255;not null" json:"username"`
-	Password   string `gorm:"size:255;not null" json:"password"`
-	Avatar     string `gorm:"size:255" json:"avatar"`
-	Level      string `gorm:"size:50" json:"level"`
-	Email      string `gorm:"size:255" json:"email"`
-	Phone      string `gorm:"size:20" json:"phone"`
-	Nickname   string `gorm:"size:255" json:"nickname"`
-	Status     int    `gorm:"default:1" json:"status"` // 1: active, 0: inactive
-	CreateTime int64  `gorm:"autoCreateTime" json:"create_time"`
-	UpdateTime int64  `gorm:"autoUpdateTime" json:"update_time"`
-	Token      string `gorm:"-" json:"token"` // 不参与数据库表处理
+	Id            int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Username      string `gorm:"size:255;not null" json:"username"`
+	Password      string `gorm:"size:255;not null" json:"password"`
+	Avatar        string `gorm:"size:255" json:"avatar"`
+	Level         string `gorm:"size:50" json:"level"`
+	Email         string `gorm:"size:255" json:"email"`
+	Phone         string `gorm:"size:20" json:"phone"`
+	Nickname      string `gorm:"size:255" json:"nickname"`
+	Status        int    `gorm:"default:1" json:"status"` // 1: active, 0: inactive
+	CreateTime    int64  `gorm:"autoCreateTime" json:"create_time"`
+	UpdateTime    int64  `gorm:"autoUpdateTime" json:"update_time"`
+	LastLoginTime int64  `gorm:"default:0" json:"last_login_time"` // 数据库中记录最后一次登录时间
+	Token         string `gorm:"-" json:"token"`                   // 不参与数据库表处理
 }
 
 func (u *User) TableName() string {
@@ -119,6 +120,12 @@ func LoginUser(db *gorm.DB, username, password string) (*User, error) {
 	if user.Status == USER_STATUS_INACTIVE {
 		return nil, fmt.Errorf("user account is inactive")
 	}
+
+	// Update the last login time
+	updateItem := make(map[string]interface{})
+	updateItem["last_login_time"] = time.Now().Unix()
+	updateItem["update_time"] = time.Now().Unix()
+	db.Table(new(User).TableName()).Where("id = ?", user.Id).Updates(updateItem)
 
 	return &user, nil
 }
