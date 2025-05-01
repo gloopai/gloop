@@ -9,17 +9,18 @@ import (
 	"github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/modules/auth"
 )
 
 // Site 代表一个具有可配置域和设置的 Web 服务器
 type Site struct {
 	modules.Base
-	Config     SiteOptions    // 站点配置
-	mux        *http.ServeMux // HTTP 路由器
-	JWTManager *JWTManager    // JWT 管理器
+	Config SiteOptions    // 站点配置
+	mux    *http.ServeMux // HTTP 路由器
 
 	// 在 Site 结构中添加 RouteCommandMap
 	RouteCommandMap *RouteCommandManager
+	Auth            *auth.Auth
 }
 
 // 初始化日志记录器
@@ -39,15 +40,10 @@ func (s *Site) Init() {
 		s.Config.Id = lib.Generate.Guid()
 	}
 
-	if s.Config.JWTOptions.Authorization == "" {
-		s.Config.JWTOptions.Authorization = "Authorization"
-	}
-
 	// 在 NewSite 函数中设置 StaticFileCacheTTL 的默认值
 	if s.Config.StaticFileCacheTTL == 0 {
 		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
 	}
-	s.JWTManager = NewJWTManager(s.Config.JWTOptions)
 
 	s.printInfo()
 }
@@ -165,7 +161,7 @@ func (s *Site) AddPayloadRoute(pattern string) {
 }
 
 // 提取公共逻辑到辅助函数
-func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *RequestAuth) {
+func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *auth.RequestAuth) {
 	if r.Method != http.MethodPost {
 		WriteJSONResponse(w, ResponsePayload{
 			Code:    http.StatusMethodNotAllowed,
@@ -219,8 +215,15 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 			return
 		}
 
+		if s.Auth == nil {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusInternalServerError,
+				Message: "Auth module not initialized",
+			})
+			return
+		}
 		// 验证 token
-		auth, err := s.JWTManager.VerifyToken(token)
+		auth, err := s.Auth.JWTManager.VerifyToken(token)
 		if err != nil {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusUnauthorized,
@@ -233,11 +236,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 	})
 }
 
-// 生成 JWT token
-func (s *Site) GenerateToken(auth RequestAuth) (string, error) {
-	token, err := s.JWTManager.GenerateToken(auth)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
+/* 使用 auth 模块 */
+func (s *Site) UseAuth(auth *auth.Auth) {
+	s.Auth = auth
 }

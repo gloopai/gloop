@@ -19,10 +19,10 @@ func StartTest() {
 		UseEmbed: true,
 		// EmbedFiles:     manageStatic,
 		ForceIndexHTML: true,
-		JWTOptions: JWTOptions{
-			SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
-			TokenDuration: 24 * 365, // 365 days
-		},
+		// JWTOptions: auth.JWTOptions{
+		// 	SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
+		// 	TokenDuration: 24 * 365, // 365 days
+		// },
 	}
 
 	mysite := NewSite(config)
