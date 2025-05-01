@@ -5,9 +5,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gloopai/gloop/components"
 	info "github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
+	components "github.com/gloopai/gloop/modules"
 )
 
 type Container struct {

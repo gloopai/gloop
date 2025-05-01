@@ -3,9 +3,9 @@ package db
 import (
 	"fmt"
 
-	"github.com/gloopai/gloop/components"
 	"github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
+	components "github.com/gloopai/gloop/modules"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	_ "modernc.org/sqlite"

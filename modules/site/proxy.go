@@ -1,6 +1,6 @@
 package site
 
-import "github.com/gloopai/gloop/db"
+import "github.com/gloopai/gloop/modules/db"
 
 type Proxy struct {
 	Site *Site

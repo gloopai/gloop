@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gloopai/gloop/component"
 	"github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
+	"github.com/gloopai/gloop/modules"
 )
 
 // Site 代表一个具有可配置域和设置的 Web 服务器
 type Site struct {
-	component.Base
+	modules.Base
 	Config     SiteOptions    // 站点配置
 	mux        *http.ServeMux // HTTP 路由器
 	JWTManager *JWTManager    // JWT 管理器
