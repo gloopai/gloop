@@ -205,8 +205,15 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 	}
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if s.Auth == nil {
+			WriteJSONResponse(w, ResponsePayload{
+				Code:    http.StatusInternalServerError,
+				Message: "Auth module not initialized",
+			})
+			return
+		}
 		// 从 Authorization 头中提取 JWT token
-		token := r.Header.Get("Authorization")
+		token := r.Header.Get(s.Auth.Authorization())
 		if token == "" {
 			WriteJSONResponse(w, ResponsePayload{
 				Code:    http.StatusUnauthorized,
@@ -215,13 +222,6 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 			return
 		}
 
-		if s.Auth == nil {
-			WriteJSONResponse(w, ResponsePayload{
-				Code:    http.StatusInternalServerError,
-				Message: "Auth module not initialized",
-			})
-			return
-		}
 		// 验证 token
 		auth, err := s.Auth.JWTManager.VerifyToken(token)
 		if err != nil {

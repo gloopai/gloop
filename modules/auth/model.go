@@ -9,6 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	USER_STATUS_ACTIVE   = 1 // 用户状态：激活
+	USER_STATUS_INACTIVE = 0 // 用户状态：未激活
+)
+
 type User struct {
 	Id         int64  `gorm:"primaryKey;autoIncrement" json:"id"`
 	Username   string `gorm:"size:255;not null" json:"username"`
@@ -21,6 +26,7 @@ type User struct {
 	Status     int    `gorm:"default:1" json:"status"` // 1: active, 0: inactive
 	CreateTime int64  `gorm:"autoCreateTime" json:"create_time"`
 	UpdateTime int64  `gorm:"autoUpdateTime" json:"update_time"`
+	Token      string `gorm:"-" json:"token"` // 不参与数据库表处理
 }
 
 func (u *User) TableName() string {
@@ -108,6 +114,10 @@ func LoginUser(db *gorm.DB, username, password string) (*User, error) {
 	// Verify the password
 	if user.Password != lib.Crypto.Md5(password) { // Note: Replace with secure password hashing in production
 		return nil, fmt.Errorf("invalid username or password")
+	}
+
+	if user.Status == USER_STATUS_INACTIVE {
+		return nil, fmt.Errorf("user account is inactive")
 	}
 
 	return &user, nil

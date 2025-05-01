@@ -50,6 +50,11 @@ func (a *Auth) TableName() string {
 	return new(User).TableName()
 }
 
+/* 获取 header 中的 Authorization key*/
+func (a *Auth) Authorization() string {
+	return a.Config.JWTOptions.Authorization
+}
+
 /* 用户注册 */
 func (a *Auth) Register(user *User) error {
 	return RegisterUser(a.db.Db, user.Username, user.Password, user.Email)
@@ -62,7 +67,16 @@ func (a *Auth) Login(user *User) error {
 		return err
 	}
 
+	token, err := a.JWTManager.GenerateToken(RequestAuth{
+		UserId:   loggedInUser.Id,
+		Username: loggedInUser.Username,
+	})
 	// Populate the user details
+	if err != nil {
+		return err
+	}
+
+	loggedInUser.Token = token
 	*user = *loggedInUser
 	return nil
 }
