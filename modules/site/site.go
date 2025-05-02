@@ -45,6 +45,10 @@ func (s *Site) Init() {
 	}
 
 	s.printInfo()
+
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
 }
 
 func (s *Site) Close() {}
