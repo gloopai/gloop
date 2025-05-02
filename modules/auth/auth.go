@@ -6,11 +6,6 @@ import (
 	"github.com/gloopai/gloop/modules/db"
 )
 
-type RequestAuth struct {
-	UserId   int64  `json:"user_id"`
-	Username string `json:"username"`
-}
-
 type Auth struct {
 	modules.Base
 	Config     AuthOptions // 认证配置
@@ -56,27 +51,55 @@ func (a *Auth) Authorization() string {
 }
 
 /* 用户注册 */
-func (a *Auth) Register(user *User) error {
-	return RegisterUser(a.db.Db, user.Username, user.Password, user.Email)
+func (a *Auth) Register(req modules.RequestPayload) modules.ResponsePayload {
+	type queryObj struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
+	}
+	var query queryObj
+	err := req.Unmarshal(&query)
+	if err != nil {
+		return modules.Response.Error(err.Error())
+	}
+	err = RegisterUser(a.db.Db, query.Username, query.Password, query.Email)
+	if err != nil {
+		return modules.Response.Error(err.Error())
+	}
+
+	return modules.Response.SuccessNone()
 }
 
 /* 用户登录 */
-func (a *Auth) Login(user *User) error {
-	loggedInUser, err := LoginUser(a.db.Db, user.Username, user.Password)
-	if err != nil {
-		return err
+func (a *Auth) Login(req modules.RequestPayload) modules.ResponsePayload {
+	type queryObject struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
-	token, err := a.JWTManager.GenerateToken(RequestAuth{
+	var query queryObject
+	err := req.Unmarshal(&query)
+	if err != nil {
+		return modules.Response.Error(err.Error())
+	}
+
+	loggedInUser, err := LoginUser(a.db.Db, query.Username, query.Password)
+	if err != nil {
+		return modules.Response.Error(err.Error())
+	}
+
+	token, err := a.JWTManager.GenerateToken(modules.RequestAuth{
 		UserId:   loggedInUser.Id,
 		Username: loggedInUser.Username,
 	})
 	// Populate the user details
 	if err != nil {
-		return err
+		return modules.Response.Error(err.Error())
 	}
 
-	loggedInUser.Token = token
-	*user = *loggedInUser
-	return nil
+	// loggedInUser.Token = token
+	resmap := make(map[string]interface{})
+	resmap["token"] = token
+
+	return modules.Response.Success(resmap)
 }

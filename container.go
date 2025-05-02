@@ -5,13 +5,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	info "github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
-	components "github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/modules"
 )
 
 type Container struct {
-	components []components.Component
+	components []modules.Component
 }
 
 type ContainerConfig struct {
@@ -27,7 +26,7 @@ func NewContainer(config ContainerConfig) *Container {
 }
 
 // Add 添加组件
-func (c *Container) Add(components ...components.Component) {
+func (c *Container) Add(components ...modules.Component) {
 	c.components = append(c.components, components...)
 }
 
@@ -74,6 +73,6 @@ func (c *Container) doDestroyComponents() {
 
 // 打印框架信息
 func (c *Container) doPrintFrameworkInfo() {
-	info.PrintFrameworkInfo()
+	modules.PrintFrameworkInfo()
 
 }

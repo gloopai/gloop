@@ -3,6 +3,7 @@ package auth
 import (
 	"time"
 
+	"github.com/gloopai/gloop/modules"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -30,7 +31,7 @@ func NewJWTManager(opt JWTOptions) *JWTManager {
 	}
 }
 
-func (j *JWTManager) GenerateToken(auth RequestAuth) (string, error) {
+func (j *JWTManager) GenerateToken(auth modules.RequestAuth) (string, error) {
 	claims := AuthJwtClaims{
 		UserId:   auth.UserId,
 		UserName: auth.Username,
@@ -42,22 +43,22 @@ func (j *JWTManager) GenerateToken(auth RequestAuth) (string, error) {
 	return token.SignedString([]byte(j.secretKey))
 }
 
-func (j *JWTManager) VerifyToken(tokenString string) (RequestAuth, error) {
+func (j *JWTManager) VerifyToken(tokenString string) (modules.RequestAuth, error) {
 	claims := &AuthJwtClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return RequestAuth{}, nil
+		return modules.RequestAuth{}, nil
 	})
 
 	if err != nil {
-		return RequestAuth{}, err
+		return modules.RequestAuth{}, err
 	}
 
 	if !token.Valid {
-		return RequestAuth{}, jwt.ErrSignatureInvalid
+		return modules.RequestAuth{}, jwt.ErrSignatureInvalid
 	}
 
-	return RequestAuth{
+	return modules.RequestAuth{
 		UserId:   claims.UserId,
 		Username: claims.UserName,
 	}, nil

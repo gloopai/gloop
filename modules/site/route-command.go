@@ -1,22 +1,26 @@
 package site
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/gloopai/gloop/modules"
+)
 
 // RouteCommandManager 管理路由命令的线程安全结构体
 type RouteCommandManager struct {
-	commands map[string]func(*RequestPayload) ResponsePayload
+	commands map[string]func(*modules.RequestPayload) modules.ResponsePayload
 	mutex    sync.RWMutex
 }
 
 // NewRouteCommandManager 创建一个新的 RouteCommandManager
 func NewRouteCommandManager() *RouteCommandManager {
 	return &RouteCommandManager{
-		commands: make(map[string]func(*RequestPayload) ResponsePayload),
+		commands: make(map[string]func(*modules.RequestPayload) modules.ResponsePayload),
 	}
 }
 
 // Store 存储一个路由命令
-func (rcm *RouteCommandManager) Store(key string, handler func(*RequestPayload) ResponsePayload) {
+func (rcm *RouteCommandManager) Store(key string, handler func(*modules.RequestPayload) modules.ResponsePayload) {
 	if rcm == nil {
 		panic("RouteCommandManager is nil")
 	}
@@ -26,7 +30,7 @@ func (rcm *RouteCommandManager) Store(key string, handler func(*RequestPayload) 
 }
 
 // Load 加载一个路由命令
-func (rcm *RouteCommandManager) Load(key string) (func(*RequestPayload) ResponsePayload, bool) {
+func (rcm *RouteCommandManager) Load(key string) (func(*modules.RequestPayload) modules.ResponsePayload, bool) {
 	rcm.mutex.RLock()
 	defer rcm.mutex.RUnlock()
 	handler, ok := rcm.commands[key]

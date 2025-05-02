@@ -3,16 +3,15 @@ package db
 import (
 	"fmt"
 
-	"github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
-	components "github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/modules"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 )
 
 type Db struct {
-	components.Base
+	modules.Base
 	Id   string // 数据库 ID
 	Path string // 数据库路径
 	Db   *gorm.DB
@@ -51,7 +50,7 @@ func (d *Db) printInfo() {
 	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
 	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
 	infos = append(infos, fmt.Sprintf("Path: %s", d.Path))
-	core.PrintBoxInfo(d.Name(), infos...)
+	modules.PrintBoxInfo(d.Name(), infos...)
 }
 
 // 提供一个方法来获取数据库连接

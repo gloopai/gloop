@@ -1,4 +1,4 @@
-package site
+package modules
 
 import (
 	"encoding/json"
@@ -8,13 +8,16 @@ import (
 	"time"
 
 	"github.com/gloopai/gloop/lib"
-	"github.com/gloopai/gloop/modules/auth"
 )
 
 type RequestPayload struct {
-	Auth    auth.RequestAuth `json:"auth"`
-	Command string           `json:"command"`
-	Data    interface{}      `json:"data"`
+	Auth    RequestAuth `json:"auth"`
+	Command string      `json:"command"`
+	Data    interface{} `json:"data"`
+}
+type RequestAuth struct {
+	UserId   int64  `json:"user_id"`
+	Username string `json:"username"`
 }
 
 // Data 反序列化

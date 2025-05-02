@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gloopai/gloop/core"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/auth"
@@ -69,7 +68,7 @@ func (s *Site) printInfo() {
 	infos = append(infos, fmt.Sprintf("ForceIndexHTML: %t", s.Config.ForceIndexHTML))
 	infos = append(infos, fmt.Sprintf("StaticFileCacheTTL: %s", s.Config.StaticFileCacheTTL))
 
-	core.PrintBoxInfo(s.Name(), infos...)
+	modules.PrintBoxInfo(s.Name(), infos...)
 }
 
 // 修改 Start 方法以在 Site 级别初始化 mux
@@ -144,7 +143,7 @@ func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 }
 
 // 修改 RegisterCommand 方法以适配 sync.Map
-func (s *Site) RegisterPayloadCommand(route string, command string, handler func(*RequestPayload) ResponsePayload) {
+func (s *Site) RegisterPayloadCommand(route string, command string, handler func(*modules.RequestPayload) modules.ResponsePayload) {
 	key := fmt.Sprintf("%s:%s", route, command)
 	s.RouteCommandMap.Store(key, handler)
 }
@@ -161,9 +160,9 @@ func (s *Site) AddPayloadRoute(pattern string) {
 }
 
 // 提取公共逻辑到辅助函数
-func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *auth.RequestAuth) {
+func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *modules.RequestAuth) {
 	if r.Method != http.MethodPost {
-		WriteJSONResponse(w, ResponsePayload{
+		modules.WriteJSONResponse(w, modules.ResponsePayload{
 			Code:    http.StatusMethodNotAllowed,
 			Message: "Method not allowed",
 		})
@@ -171,9 +170,9 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 	}
 
 	// 解析 JSON 请求体
-	var payload RequestPayload
-	if err := ParseJSONRequest(r, &payload); err != nil {
-		WriteJSONResponse(w, ResponsePayload{
+	var payload modules.RequestPayload
+	if err := modules.ParseJSONRequest(r, &payload); err != nil {
+		modules.WriteJSONResponse(w, modules.ResponsePayload{
 			Code:    http.StatusBadRequest,
 			Message: "Invalid JSON payload",
 		})
@@ -188,11 +187,11 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 	key := fmt.Sprintf("%s:%s", pattern, payload.Command)
 	if handler, ok := s.RouteCommandMap.Load(key); ok {
 		response := handler(&payload)
-		WriteJSONResponse(w, response)
+		modules.WriteJSONResponse(w, response)
 		return
 	}
 
-	WriteJSONResponse(w, ResponsePayload{
+	modules.WriteJSONResponse(w, modules.ResponsePayload{
 		Code:    http.StatusNotFound,
 		Message: "Command not found",
 	})
@@ -206,7 +205,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if s.Auth == nil {
-			WriteJSONResponse(w, ResponsePayload{
+			modules.WriteJSONResponse(w, modules.ResponsePayload{
 				Code:    http.StatusInternalServerError,
 				Message: "Auth module not initialized",
 			})
@@ -215,7 +214,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 		// 从 Authorization 头中提取 JWT token
 		token := r.Header.Get(s.Auth.Authorization())
 		if token == "" {
-			WriteJSONResponse(w, ResponsePayload{
+			modules.WriteJSONResponse(w, modules.ResponsePayload{
 				Code:    http.StatusUnauthorized,
 				Message: "Missing Authorization header",
 			})
@@ -225,7 +224,7 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 		// 验证 token
 		auth, err := s.Auth.JWTManager.VerifyToken(token)
 		if err != nil {
-			WriteJSONResponse(w, ResponsePayload{
+			modules.WriteJSONResponse(w, modules.ResponsePayload{
 				Code:    http.StatusUnauthorized,
 				Message: "Invalid token",
 			})
