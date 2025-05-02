@@ -154,6 +154,11 @@ func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
 
 // 注册一个普通路由
 func (s *Site) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
+	defer func() {
+		if r := recover(); r != nil {
+			lib.Log.Errorf("AddRoute panic: %v\n", r)
+		}
+	}()
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
@@ -168,6 +173,11 @@ func (s *Site) RegisterPayloadCommand(route string, command string, handler func
 
 // 修改 AddPayloadRoute 方法以适配 sync.Map
 func (s *Site) AddPayloadRoute(pattern string) {
+	defer func() {
+		if r := recover(); r != nil {
+			lib.Log.Errorf("AddPayloadRoute panic: %v\n", r)
+		}
+	}()
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
@@ -217,6 +227,11 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 
 // 修改 AddTokenPayloadRoute 方法以使用辅助函数
 func (s *Site) AddTokenPayloadRoute(pattern string) {
+	defer func() {
+		if r := recover(); r != nil {
+			lib.Log.Errorf("AddPayloadRoute panic: %v\n", r)
+		}
+	}()
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
