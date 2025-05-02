@@ -25,6 +25,9 @@ type SiteOptions struct {
 
 	// 在 SiteConfig 中添加 StaticFileCacheTTL 配置项
 	StaticFileCacheTTL time.Duration `json:"static_file_cache_ttl"`
+
+	// 在 SiteConfig 中添加 CrossOrigin 配置项
+	CrossOrigin bool `json:"cross_origin"` // 是否启用跨域
 }
 
 func DefaultOptions() SiteOptions {

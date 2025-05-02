@@ -81,9 +81,23 @@ func (s *Site) Start() error {
 		s.mux = http.NewServeMux()
 	}
 
-	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		s.serveStaticFiles(w, r)
-	})
+	// 在 Start 方法中增加跨域支持
+	if s.Config.CrossOrigin {
+		s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			s.serveStaticFiles(w, r)
+		})
+	} else {
+		s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			s.serveStaticFiles(w, r)
+		})
+	}
 
 	// 优化 HTTP 服务器配置
 	server := &http.Server{
