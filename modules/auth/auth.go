@@ -51,7 +51,7 @@ func (a *Auth) Authorization() string {
 }
 
 /* 用户注册 */
-func (a *Auth) Register(req modules.RequestPayload) modules.ResponsePayload {
+func (a *Auth) Register(req *modules.RequestPayload) modules.ResponsePayload {
 	type queryObj struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -71,7 +71,7 @@ func (a *Auth) Register(req modules.RequestPayload) modules.ResponsePayload {
 }
 
 /* 用户登录 */
-func (a *Auth) Login(req modules.RequestPayload) modules.ResponsePayload {
+func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
 	type queryObject struct {
 		Username string `json:"username"`
 		Password string `json:"password"`

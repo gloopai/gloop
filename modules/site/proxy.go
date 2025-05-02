@@ -14,5 +14,6 @@ type Proxy struct {
 func NewProxy(site *Site) *Proxy {
 	return &Proxy{
 		Site: site,
+		Auth: site.Auth,
 	}
 }
