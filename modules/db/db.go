@@ -11,7 +11,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type Db struct {
+type DbService struct {
 	modules.Base
 	Id   string // 数据库 ID
 	Path string // 数据库路径
@@ -19,18 +19,18 @@ type Db struct {
 }
 
 // NewDb 创建一个新的数据库实例
-func NewDb(opt DbOptions) *Db {
-	return &Db{
+func NewDb(opt DbOptions) *DbService {
+	return &DbService{
 		Path: opt.DbPath,
 	}
 }
 
-func (d *Db) Name() string {
+func (d *DbService) Name() string {
 	return "db"
 }
 
 // 修改 Init 方法以保存数据库连接，并提供一个方法获取连接
-func (d *Db) Init() {
+func (d *DbService) Init() {
 	d.printInfo()
 
 	lib.Log.Info("Initializing SQLite database at path:", d.Path)
@@ -48,9 +48,9 @@ func (d *Db) Init() {
 }
 
 /*  */
-func (d *Db) Close() {}
+func (d *DbService) Close() {}
 
-func (d *Db) printInfo() {
+func (d *DbService) printInfo() {
 	infos := make([]string, 0, 2)
 	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
 	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
@@ -59,7 +59,7 @@ func (d *Db) printInfo() {
 }
 
 // 提供一个方法来获取数据库连接
-func (d *Db) GetConnection() *gorm.DB {
+func (d *DbService) GetConnection() *gorm.DB {
 	return d.Db
 }
 

@@ -9,7 +9,7 @@ import (
 type Auth struct {
 	modules.Base
 	Config     AuthOptions // 认证配置
-	db         *db.Db
+	db         *db.DbService
 	JWTManager *JWTManager // JWT 管理器
 }
 

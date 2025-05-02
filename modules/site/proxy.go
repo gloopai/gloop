@@ -6,14 +6,15 @@ import (
 )
 
 type Proxy struct {
-	Site *Site
-	Auth *auth.Auth
-	Db   *db.Db
+	Site      *Site
+	Auth      *auth.Auth
+	DbService *db.DbService
 }
 
 func NewProxy(site *Site) *Proxy {
 	return &Proxy{
-		Site: site,
-		Auth: site.Auth,
+		Site:      site,
+		Auth:      site.Auth,
+		DbService: site.DbService,
 	}
 }
