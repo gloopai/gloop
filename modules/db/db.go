@@ -7,6 +7,7 @@ import (
 	"github.com/gloopai/gloop/modules"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	_ "modernc.org/sqlite"
 )
 
@@ -18,7 +19,7 @@ type Db struct {
 }
 
 // NewDb 创建一个新的数据库实例
-func NewDbSqlite(opt DbOptions) *Db {
+func NewDb(opt DbOptions) *Db {
 	return &Db{
 		Path: opt.DbPath,
 	}
@@ -33,7 +34,11 @@ func (d *Db) Init() {
 	d.printInfo()
 
 	lib.Log.Info("Initializing SQLite database at path:", d.Path)
-	db, err := gorm.Open(sqlite.Open(d.Path), &gorm.Config{})
+	// 设置 gorm 的日志级别
+	gormConfig := &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Warn),
+	}
+	db, err := gorm.Open(sqlite.Open(d.Path), gormConfig)
 	if err != nil {
 		return
 	}
