@@ -25,6 +25,14 @@ type JWTOptions struct {
 }
 
 func NewJWTManager(opt JWTOptions) *JWTManager {
+	if opt.SecretKey == "" {
+		opt.SecretKey = "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI="
+	}
+
+	if opt.TokenDuration == 0 {
+		opt.TokenDuration = 24 * 365 // Default token duration is 24 hours
+	}
+
 	return &JWTManager{
 		secretKey:     opt.SecretKey,
 		tokenDuration: time.Duration(time.Hour * time.Duration(opt.TokenDuration)),
@@ -47,7 +55,12 @@ func (j *JWTManager) VerifyToken(tokenString string) (modules.RequestAuth, error
 	claims := &AuthJwtClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return modules.RequestAuth{}, nil
+		// 验证签名方法是否为 HS256
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		// 返回用于验证签名的密钥
+		return []byte(j.secretKey), nil
 	})
 
 	if err != nil {

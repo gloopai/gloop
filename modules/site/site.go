@@ -261,7 +261,15 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 		if err != nil {
 			modules.WriteJSONResponse(w, modules.ResponsePayload{
 				Code:    http.StatusUnauthorized,
-				Message: "Invalid token",
+				Message: "Invalid token 1 " + err.Error(),
+			})
+			return
+		}
+
+		if auth.UserId == 0 {
+			modules.WriteJSONResponse(w, modules.ResponsePayload{
+				Code:    http.StatusUnauthorized,
+				Message: "Invalid token 2",
 			})
 			return
 		}

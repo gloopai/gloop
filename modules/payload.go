@@ -157,12 +157,10 @@ func (r *ResponsePayload) List(list interface{}, page int, pagesize int, total i
 	format["update_time"] = "update_time"
 	resList, _ := r.ListFormatCreateTimeAndUpdateTime(list, format)
 	data["list"] = resList
-	resMap := make(map[string]interface{})
-	resMap["items"] = data
 	return ResponsePayload{
 		Code:    20000,
 		Message: "",
-		Data:    resMap,
+		Data:    data,
 	}
 }
 
