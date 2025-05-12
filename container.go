@@ -26,12 +26,12 @@ func NewContainer(config ContainerConfig) *Container {
 
 	c := &Container{}
 
-	node, err := modules.NewNode()
-	if err != nil {
-		lib.Log.Fatal(err)
-		os.Exit(0)
-	}
-	c.Node = node
+	// node, err := modules.NewNode()
+	// if err != nil {
+	// 	lib.Log.Fatal(err)
+	// 	os.Exit(0)
+	// }
+	// c.Node = node
 
 	return c
 }
@@ -45,8 +45,8 @@ func (c *Container) Add(components ...modules.Component) {
 func (c *Container) Serve() {
 	c.doPrintFrameworkInfo()
 	// 初始化节点
-	c.Node.Init()
-	c.Node.Start()
+	// c.Node.Init()
+	// c.Node.Start()
 
 	c.doInitComponents()
 	c.doStartComponents()
