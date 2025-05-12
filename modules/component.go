@@ -11,9 +11,14 @@ type Component interface {
 	Close()
 	// Destroy 销毁组件
 	Destroy()
+	// 写入上下文
+	SetContext(ctx *ComponentContext)
+	// 读取上下文
+	GetContext() *ComponentContext
 }
 
 type Base struct {
+	ctx *ComponentContext
 }
 
 // Name 组件名称
@@ -30,3 +35,13 @@ func (b *Base) Close() {}
 
 // Destroy 销毁组件
 func (b *Base) Destroy() {}
+
+// SetContext 写入上下文
+func (b *Base) SetContext(ctx *ComponentContext) {
+	b.ctx = ctx
+}
+
+// GetContext 读取上下文
+func (b *Base) GetContext() *ComponentContext {
+	return b.ctx
+}

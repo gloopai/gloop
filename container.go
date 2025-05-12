@@ -11,6 +11,7 @@ import (
 
 type Container struct {
 	components []modules.Component
+	Node       *modules.Node
 }
 
 type ContainerConfig struct {
@@ -22,7 +23,11 @@ type ContainerConfig struct {
 func NewContainer(config ContainerConfig) *Container {
 	lib.Log.SetLogLevel(config.LogLevel)
 	lib.Log.SetDebugEnabled(config.Debug)
-	return &Container{}
+
+	c := &Container{}
+
+	c.Node = modules.NewNode()
+	return c
 }
 
 // Add 添加组件
@@ -33,6 +38,9 @@ func (c *Container) Add(components ...modules.Component) {
 // Serve 启动容器
 func (c *Container) Serve() {
 	c.doPrintFrameworkInfo()
+	// 初始化节点
+	c.Node.Init()
+	c.Node.Start()
 
 	c.doInitComponents()
 	c.doStartComponents()
@@ -53,6 +61,9 @@ func (c *Container) Serve() {
 // 初始化所有组件
 func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
+		comp.SetContext(&modules.ComponentContext{
+			Node: c.Node,
+		})
 		comp.Init()
 	}
 }

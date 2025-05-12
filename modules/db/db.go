@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 
-	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -33,7 +32,7 @@ func (d *DbService) Name() string {
 func (d *DbService) Init() {
 	d.printInfo()
 
-	lib.Log.Info("Initializing SQLite database at path:", d.Path)
+	// lib.Log.Info("Initializing SQLite database at path:", d.Path)
 	// 设置 gorm 的日志级别
 	gormConfig := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn),
@@ -44,7 +43,7 @@ func (d *DbService) Init() {
 	}
 	// 将数据库连接保存到结构体中
 	d.Db = db
-	lib.Log.Info("SQLite database initialized successfully")
+	// lib.Log.Info("SQLite database initialized successfully")
 }
 
 /*  */
@@ -55,6 +54,7 @@ func (d *DbService) printInfo() {
 	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
 	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
 	infos = append(infos, fmt.Sprintf("Path: %s", d.Path))
+	infos = append(infos, fmt.Sprintf("driver: SQLITE"))
 	modules.PrintBoxInfo(d.Name(), infos...)
 }
 
