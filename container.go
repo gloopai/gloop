@@ -60,7 +60,7 @@ func (c *Container) doInitComponents() {
 // 启动所有组件
 func (c *Container) doStartComponents() {
 	for _, comp := range c.components {
-		comp.Start()
+		go comp.Start()
 	}
 }
 
