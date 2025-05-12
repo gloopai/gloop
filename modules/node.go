@@ -3,6 +3,8 @@ package modules
 import (
 	"fmt"
 	"time"
+
+	"github.com/gloopai/gloop/lib"
 )
 
 // Client
@@ -51,24 +53,43 @@ func (c *Client) Heartbeat() {
 // Node 组件
 type Node struct {
 	Base
-	Config *NodeConfig
+	Config NodeOptions
 	Client *Client
 }
 
-type NodeConfig struct {
-	NodeID  string `json:"node_id"`
-	Address string `json:"address"`
+type NodeOptions struct {
+	NodeID  string
+	Address string
 }
 
-func NewNode() *Node {
-	config := &NodeConfig{
-		NodeID:  "node-1",
-		Address: "",
-	}
+func NewNode() (*Node, error) {
+	config := NodeOptions{}
 
-	return &Node{
+	node := &Node{
 		Config: config,
 	}
+
+	err := node.loadOptions()
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+/* 获取节点配置 */
+func (n *Node) loadOptions() error {
+	err := lib.Conf.LoadTOML("node.toml", &n.Config)
+	if err != nil {
+		return fmt.Errorf("load node config failed: %w", err)
+	}
+	if n.Config.NodeID == "" {
+		return fmt.Errorf("NodeID is empty")
+	}
+	if n.Config.Address == "" {
+		return fmt.Errorf("address is empty")
+	}
+
+	return nil
 }
 
 func (n *Node) Name() string {

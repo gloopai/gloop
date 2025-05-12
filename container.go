@@ -26,7 +26,13 @@ func NewContainer(config ContainerConfig) *Container {
 
 	c := &Container{}
 
-	c.Node = modules.NewNode()
+	node, err := modules.NewNode()
+	if err != nil {
+		lib.Log.Fatal(err)
+		os.Exit(0)
+	}
+	c.Node = node
+
 	return c
 }
 
