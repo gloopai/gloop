@@ -17,6 +17,7 @@ type Node struct {
 type NodeOptions struct {
 	NodeID  string
 	Address string
+	Gateway string
 }
 
 func NewNode() (*Node, error) {
@@ -58,7 +59,11 @@ func (n *Node) Init() {
 }
 
 func (n *Node) Start() error {
-	n.Client = node.NewClient(node.ClientConfig{})
+	n.Client = node.NewClient(node.ClientConfig{
+		NodeID:  n.Config.NodeID,
+		Address: n.Config.Address,
+		Gateway: n.Config.Gateway,
+	})
 	n.Client.Start()
 
 	return nil

@@ -42,7 +42,7 @@ func (c *conf) LoadTOML(path string, v interface{}) error {
 		return err
 	}
 
-	fmt.Println("Loaded TOML data:", string(tomlData))
+	// fmt.Println("Loaded TOML data:", string(tomlData))
 
 	// 解析 TOML 数据
 	_, err = toml.Decode(string(tomlData), v)
