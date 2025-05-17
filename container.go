@@ -1,6 +1,8 @@
 package gloop
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,6 +12,7 @@ import (
 )
 
 type Container struct {
+	Config     *ContainerConfig
 	components []modules.Component
 	Node       *modules.Node
 }
@@ -20,11 +23,17 @@ type ContainerConfig struct {
 }
 
 // NewContainer 创建一个容器
-func NewContainer(config ContainerConfig) *Container {
+func NewContainer() *Container {
+	config, err := loadWebhookOptions()
+	if err != nil {
+		log.Fatalf("[NewWebhook] Failed to load webhook configuration: %v", err)
+	}
 	lib.Log.SetLogLevel(config.LogLevel)
 	lib.Log.SetDebugEnabled(config.Debug)
 
-	c := &Container{}
+	c := &Container{
+		Config: config,
+	}
 
 	// node, err := modules.NewNode()
 	// if err != nil {
@@ -34,6 +43,16 @@ func NewContainer(config ContainerConfig) *Container {
 	// c.Node = node
 
 	return c
+}
+
+func loadWebhookOptions() (*ContainerConfig, error) {
+	var options *ContainerConfig
+	err := lib.Conf.LoadTOML("container.toml", &options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load webhook configuration: %v", err)
+	}
+
+	return options, nil
 }
 
 // Add 添加组件
@@ -92,4 +111,8 @@ func (c *Container) doDestroyComponents() {
 func (c *Container) doPrintFrameworkInfo() {
 	modules.PrintFrameworkInfo()
 
+	infos := make([]string, 0, 7)
+	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
+	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
+	modules.PrintBoxInfo("Container", infos...)
 }
