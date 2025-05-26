@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/db"
@@ -102,4 +104,22 @@ func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
 	resmap["token"] = token
 
 	return modules.Response.Success(resmap)
+}
+
+/* 获取用户信息 */
+func (a *Auth) ParseToken(req *modules.RequestPayload) modules.ResponsePayload {
+	type queryObject struct {
+		Token string `json:"token"`
+	}
+	var query queryObject
+	err := req.Unmarshal(&query)
+	if err != nil {
+		return modules.Response.Error(err.Error())
+	}
+	auth, err := a.JWTManager.VerifyToken(query.Token)
+	if err != nil {
+		return modules.Response.Error(fmt.Sprintf("JWTERROR:%s", err.Error()))
+	}
+
+	return modules.Response.Success(auth)
 }
