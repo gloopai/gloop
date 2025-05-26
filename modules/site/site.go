@@ -67,8 +67,8 @@ func (s *Site) printInfo() {
 	infos = append(infos, fmt.Sprintf("BaseRoot: %s", s.Config.BaseRoot))
 	infos = append(infos, fmt.Sprintf("UseHTTPS: %t", s.Config.UseHTTPS))
 	if s.Config.UseHTTPS {
-		infos = append(infos, fmt.Sprintf("TLSCert: %s", s.Config.TLSCert))
-		infos = append(infos, fmt.Sprintf("TLSKey: %s", s.Config.TLSKey))
+		infos = append(infos, fmt.Sprintf("TLSCert: %s", s.Config.Cert.CertFile))
+		infos = append(infos, fmt.Sprintf("TLSKey: %s", s.Config.Cert.KeyFile))
 	}
 
 	infos = append(infos, fmt.Sprintf("ForceIndexHTML: %t", s.Config.ForceIndexHTML))
@@ -113,13 +113,13 @@ func (s *Site) Start() error {
 	}
 
 	if s.Config.UseHTTPS {
-		if s.Config.TLSCert == "" || s.Config.TLSKey == "" {
+		if s.Config.Cert.CertFile == "" || s.Config.Cert.KeyFile == "" {
 			return fmt.Errorf("必须提供 TLS 证书和密钥以启用 HTTPS (端口: %d)", s.Config.Port)
 		}
 
-		cert, err := tls.LoadX509KeyPair(s.Config.TLSCert, s.Config.TLSKey)
+		cert, err := tls.LoadX509KeyPair(s.Config.Cert.CertFile, s.Config.Cert.KeyFile)
 		if err != nil {
-			return fmt.Errorf("加载 TLS 证书和密钥失败 (证书: %s, 密钥: %s): %v", s.Config.TLSCert, s.Config.TLSKey, err)
+			return fmt.Errorf("加载 TLS 证书和密钥失败 (证书: %s, 密钥: %s): %v", s.Config.Cert.CertFile, s.Config.Cert.KeyFile, err)
 		}
 
 		server.TLSConfig = &tls.Config{

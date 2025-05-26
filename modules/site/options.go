@@ -9,13 +9,17 @@ import (
 	"github.com/gloopai/gloop/lib"
 )
 
+type SiteCert struct {
+	CertFile string `json:"CertFile"` // 证书内容
+	KeyFile  string `json:"KeyFile"`  // 密钥内容
+}
+
 // SiteConfig 保存 Site 的配置
 type SiteOptions struct {
 	Id             string   `json:"id"`               // 站点 ID
 	Port           int      `json:"port"`             // 端口号
-	TLSCert        string   `json:"tls_cert"`         // cert 证书路径，UseHTTPS 为 true 时需要
-	TLSKey         string   `json:"tls_key"`          // key 证书路径，UseHTTPS 为 true 时需要
 	UseHTTPS       bool     `json:"use_https"`        // 是否使用 HTTPS
+	Cert           SiteCert `json:"cert"`             // 证书配置
 	BaseRoot       string   `json:"base_root"`        // 基础目录
 	UseEmbed       bool     `json:"use_embed"`        // 是否使用嵌入文件
 	EmbedFiles     embed.FS `json:"embed_files"`      // 嵌入文件系统
@@ -30,11 +34,13 @@ type SiteOptions struct {
 
 func DefaultOptions() SiteOptions {
 	return SiteOptions{
-		Id:             lib.Generate.Guid(),
-		Port:           8080,
-		TLSCert:        "",
-		TLSKey:         "",
-		UseHTTPS:       false,
+		Id:       lib.Generate.Guid(),
+		Port:     8080,
+		UseHTTPS: false,
+		Cert: SiteCert{
+			CertFile: "",
+			KeyFile:  "",
+		},
 		BaseRoot:       "./",
 		UseEmbed:       false,
 		EmbedFiles:     embed.FS{},
@@ -60,8 +66,7 @@ func LoadSiteJSONOptions(path string) SiteOptions {
 	return SiteOptions{
 		Id:             options.Id,
 		Port:           options.Port,
-		TLSCert:        options.TLSCert,
-		TLSKey:         options.TLSKey,
+		Cert:           options.Cert,
 		UseHTTPS:       options.UseHTTPS,
 		BaseRoot:       options.BaseRoot,
 		UseEmbed:       false,

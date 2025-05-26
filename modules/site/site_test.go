@@ -11,9 +11,11 @@ import (
 func StartTest() {
 	// Example usage
 	config := SiteOptions{
-		Port:     8080,
-		TLSCert:  "path/to/cert.pem",
-		TLSKey:   "path/to/key.pem",
+		Port: 8080,
+		Cert: SiteCert{
+			CertFile: "path/to/cert.pem",
+			KeyFile:  "path/to/key.pem",
+		},
 		UseHTTPS: false,
 		BaseRoot: "static",
 		UseEmbed: true,
