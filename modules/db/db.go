@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/gloopai/gloop/modules"
 	"gorm.io/driver/sqlite"
@@ -32,6 +34,16 @@ func (d *DbService) Name() string {
 func (d *DbService) Init() {
 	d.printInfo()
 
+	// 检查数据库文件夹是否存在，不存在则创建
+	dir := filepath.Dir(d.Path)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			fmt.Printf("failed to create database directory: %v\n", err)
+			return
+		}
+	}
+
 	// lib.Log.Info("Initializing SQLite database at path:", d.Path)
 	// 设置 gorm 的日志级别
 	gormConfig := &gorm.Config{
@@ -54,7 +66,7 @@ func (d *DbService) printInfo() {
 	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
 	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
 	infos = append(infos, fmt.Sprintf("Path: %s", d.Path))
-	infos = append(infos, fmt.Sprintf("driver: SQLITE"))
+	infos = append(infos, "driver: SQLITE")
 	modules.PrintBoxInfo(d.Name(), infos...)
 }
 
