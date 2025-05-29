@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/auth"
@@ -21,6 +22,7 @@ type Site struct {
 	// 在 Site 结构中添加 RouteCommandMap
 	RouteCommandMap *RouteCommandManager
 	Auth            *auth.Auth
+	events          *events.EventBus // 事件总线
 	DbService       *db.DbService
 }
 
@@ -287,4 +289,8 @@ func (s *Site) UseAuth(auth *auth.Auth) {
 
 func (s *Site) UseDbService(db *db.DbService) {
 	s.DbService = db
+}
+
+func (s *Site) UseEventBus(events *events.EventBus) {
+	s.events = events
 }
