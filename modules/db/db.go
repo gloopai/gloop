@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/gloopai/gloop/modules"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -44,13 +45,33 @@ func (d *DbService) Init() {
 		}
 	}
 
-	// lib.Log.Info("Initializing SQLite database at path:", d.Path)
+	// 检查数据库文件是否存在，不存在则创建空文件
+	if _, err := os.Stat(d.Path); os.IsNotExist(err) {
+		file, err := os.Create(d.Path)
+		if err != nil {
+			fmt.Printf("failed to create database file: %v\n", err)
+			return
+		}
+		file.Close()
+	}
+
+	// 打印数据库文件绝对路径和权限
+	absPath, _ := filepath.Abs(d.Path)
+	info, err := os.Stat(d.Path)
+	if err == nil {
+		fmt.Printf("Database file absolute path: %s, mode: %v\n", absPath, info.Mode())
+	} else {
+		fmt.Printf("Database file stat error: %v\n", err)
+	}
+
 	// 设置 gorm 的日志级别
 	gormConfig := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn),
 	}
 	db, err := gorm.Open(sqlite.Open(d.Path), gormConfig)
 	if err != nil {
+		fmt.Printf("failed to open database: %v\n", err)
+		d.Db = nil
 		return
 	}
 	// 将数据库连接保存到结构体中
@@ -77,6 +98,9 @@ func (d *DbService) GetConnection() *gorm.DB {
 
 /* 数据表初始化 */
 func AutoMigrate(db *gorm.DB, model interface{}) error {
+	if db == nil {
+		return fmt.Errorf("database connection is nil, cannot migrate table")
+	}
 	// Automatically migrate the schema, ensuring the table structure matches the model struct
 	if err := db.AutoMigrate(model); err != nil {
 		return fmt.Errorf("failed to migrate table: %w", err)
