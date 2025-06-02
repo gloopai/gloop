@@ -5,10 +5,27 @@ import (
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/gloopai/gloop/lib"
+	"github.com/google/uuid"
 )
 
+// EventMessage 定义事件消息结构体
+// 包含消息编号、时间戳和数据
+// EventMessage 事件消息结构体
+type EventMessage struct {
+	ID        string      // 消息编号
+	Timestamp time.Time   // 消息时间
+	Data      interface{} // 消息数据
+}
+
+// Data 反序列化
+func (e *EventMessage) Unmarshal(v interface{}) error {
+	return lib.Convert.InterfaceToStruct(e.Data, &v)
+}
+
 // EventHandler defines the function signature for event handlers.
-type EventHandler func(data interface{})
+type EventHandler func(msg *EventMessage)
 
 // EventHandlerWithContext defines the function signature for event handlers with context and generic type.
 type EventHandlerWithContext[T any] func(ctx context.Context, data T)
@@ -119,9 +136,9 @@ func (eb *EventBus) Unsubscribe(event string, handler EventHandler) {
 // Once subscribes a handler that will be called only once for the event.
 func (eb *EventBus) Once(event string, handler EventHandler) {
 	var wrapper EventHandler
-	wrapper = func(data interface{}) {
+	wrapper = func(msg *EventMessage) {
 		eb.Unsubscribe(event, wrapper)
-		handler(data)
+		handler(msg)
 	}
 	eb.Subscribe(event, wrapper)
 }
@@ -159,16 +176,19 @@ func (eb *EventBus) UnsubscribePattern(pattern string, handler EventHandler) {
 
 // Publish triggers all handlers subscribed to an event.
 func (eb *EventBus) Publish(event string, data interface{}) {
-	// 拷贝一份 handler 列表，避免并发和 handler 内部操作事件总线导致竞态
 	eb.lock.RLock()
 	handlers := append([]EventHandler(nil), eb.listeners[event]...)
-	// 匹配 patternHandlers
 	for _, ph := range eb.patternHandlers {
 		if matchPattern(ph.pattern, event) {
 			handlers = append(handlers, ph.handler)
 		}
 	}
 	eb.lock.RUnlock()
+	msg := &EventMessage{
+		ID:        uuid.NewString(),
+		Timestamp: time.Now(),
+		Data:      data,
+	}
 	for _, handler := range handlers {
 		go func(h EventHandler) {
 			defer func() {
@@ -176,7 +196,7 @@ func (eb *EventBus) Publish(event string, data interface{}) {
 					// 可加日志：fmt.Printf("event handler panic: %v\n", r)
 				}
 			}()
-			h(data)
+			h(msg)
 		}(handler)
 	}
 }
@@ -223,6 +243,11 @@ func (eb *EventBus) SyncPublish(event string, data interface{}) {
 		}
 	}
 	eb.lock.RUnlock()
+	msg := &EventMessage{
+		ID:        uuid.NewString(),
+		Timestamp: time.Now(),
+		Data:      data,
+	}
 	for _, handler := range handlers {
 		func(h EventHandler) {
 			defer func() {
@@ -230,7 +255,7 @@ func (eb *EventBus) SyncPublish(event string, data interface{}) {
 					// 可加日志：fmt.Printf("event handler panic: %v\n", r)
 				}
 			}()
-			h(data)
+			h(msg)
 		}(handler)
 	}
 }

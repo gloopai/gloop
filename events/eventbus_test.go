@@ -13,9 +13,9 @@ func TestEventBus_SubscribeAndPublish(t *testing.T) {
 	called := false
 
 	wg.Add(1)
-	eb.Subscribe("test_event", func(data interface{}) {
+	eb.Subscribe("test_event", func(msg *EventMessage) {
 		defer wg.Done()
-		if msg, ok := data.(string); ok && msg == "hello" {
+		if str, ok := msg.Data.(string); ok && str == "hello" {
 			called = true
 		}
 	})
@@ -32,7 +32,7 @@ func TestEventBus_Unsubscribe(t *testing.T) {
 	eb := NewEventBus()
 	var wg sync.WaitGroup
 	called := false
-	handler := func(data interface{}) {
+	handler := func(msg *EventMessage) {
 		called = true
 	}
 	eb.Subscribe("event", handler)
@@ -52,7 +52,7 @@ func TestEventBus_Once(t *testing.T) {
 	var wg sync.WaitGroup
 	count := 0
 	wg.Add(1)
-	eb.Once("once_event", func(data interface{}) {
+	eb.Once("once_event", func(msg *EventMessage) {
 		count++
 		wg.Done()
 	})
@@ -67,7 +67,7 @@ func TestEventBus_Once(t *testing.T) {
 func TestEventBus_Close(t *testing.T) {
 	eb := NewEventBus()
 	called := false
-	eb.Subscribe("close_event", func(data interface{}) { called = true })
+	eb.Subscribe("close_event", func(msg *EventMessage) { called = true })
 	eb.Close()
 	eb.Publish("close_event", nil)
 	if called {
@@ -80,7 +80,7 @@ func TestEventBus_HasSubscribers(t *testing.T) {
 	if eb.HasSubscribers("evt") {
 		t.Error("should not have subscribers")
 	}
-	eb.Subscribe("evt", func(data interface{}) {})
+	eb.Subscribe("evt", func(msg *EventMessage) {})
 	if !eb.HasSubscribers("evt") {
 		t.Error("should have subscribers")
 	}
@@ -88,9 +88,9 @@ func TestEventBus_HasSubscribers(t *testing.T) {
 
 func TestEventBus_EventStats(t *testing.T) {
 	eb := NewEventBus()
-	eb.Subscribe("a", func(data interface{}) {})
-	eb.Subscribe("a", func(data interface{}) {})
-	eb.Subscribe("b", func(data interface{}) {})
+	eb.Subscribe("a", func(msg *EventMessage) {})
+	eb.Subscribe("a", func(msg *EventMessage) {})
+	eb.Subscribe("b", func(msg *EventMessage) {})
 	stats := eb.EventStats()
 	if stats["a"] != 2 || stats["b"] != 1 {
 		t.Errorf("unexpected stats: %+v", stats)
@@ -99,7 +99,7 @@ func TestEventBus_EventStats(t *testing.T) {
 
 func TestEventBus_SubscribeParamCheck(t *testing.T) {
 	eb := NewEventBus()
-	eb.Subscribe("", func(data interface{}) {})
+	eb.Subscribe("", func(msg *EventMessage) {})
 	eb.Subscribe("evt", nil)
 	if eb.HasSubscribers("") || eb.HasSubscribers("evt") {
 		t.Error("should not subscribe with empty event or nil handler")
@@ -109,7 +109,7 @@ func TestEventBus_SubscribeParamCheck(t *testing.T) {
 func TestEventBus_SubscribeDedup(t *testing.T) {
 	eb := NewEventBus()
 	count := 0
-	h := func(data interface{}) { count++ }
+	h := func(msg *EventMessage) { count++ }
 	eb.Subscribe("evt", h)
 	eb.Subscribe("evt", h)
 	eb.SyncPublish("evt", nil)
@@ -121,8 +121,8 @@ func TestEventBus_SubscribeDedup(t *testing.T) {
 func TestEventBus_SyncPublish(t *testing.T) {
 	eb := NewEventBus()
 	var order []int
-	eb.Subscribe("evt", func(data interface{}) { order = append(order, 1) })
-	eb.Subscribe("evt", func(data interface{}) { order = append(order, 2) })
+	eb.Subscribe("evt", func(msg *EventMessage) { order = append(order, 1) })
+	eb.Subscribe("evt", func(msg *EventMessage) { order = append(order, 2) })
 	eb.SyncPublish("evt", nil)
 	if len(order) != 2 || order[0] != 1 || order[1] != 2 {
 		t.Errorf("SyncPublish should call handlers in order, got %v", order)
@@ -133,15 +133,17 @@ func TestEventBus_SubscribePattern(t *testing.T) {
 	eb := NewEventBus()
 	var mu sync.Mutex
 	var called []string
-	eb.SubscribePattern("user.*", func(data interface{}) {
+	eb.SubscribePattern("user.*", func(msg *EventMessage) {
 		mu.Lock()
-		called = append(called, data.(string))
+		if str, ok := msg.Data.(string); ok {
+			called = append(called, str)
+		}
 		mu.Unlock()
 	})
 	var wg sync.WaitGroup
 	wg.Add(2)
-	eb.Subscribe("user.create", func(data interface{}) { wg.Done() })
-	eb.Subscribe("user.delete", func(data interface{}) { wg.Done() })
+	eb.Subscribe("user.create", func(msg *EventMessage) { wg.Done() })
+	eb.Subscribe("user.delete", func(msg *EventMessage) { wg.Done() })
 	eb.Publish("user.create", "a")
 	eb.Publish("user.delete", "b")
 	wg.Wait()
@@ -157,7 +159,7 @@ func TestEventBus_SubscribePattern(t *testing.T) {
 func TestEventBus_UnsubscribePattern(t *testing.T) {
 	eb := NewEventBus()
 	count := 0
-	h := func(data interface{}) { count++ }
+	h := func(msg *EventMessage) { count++ }
 	eb.SubscribePattern("order.*", h)
 	eb.UnsubscribePattern("order.*", h)
 	eb.SyncPublish("order.create", nil)
