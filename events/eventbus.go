@@ -81,6 +81,7 @@ func NewGenericEventBus[T any](logger LoggerHook) *GenericEventBus[T] {
 // If event is empty or handler is nil, it does nothing.
 // If the handler is already subscribed to the event, it will not be added again.
 func (eb *EventBus) Subscribe(event string, handler EventHandler) {
+	// lib.Log.Debugf("Subscribe event: %s, handler: %v", event, handler)
 	if event == "" || handler == nil {
 		return
 	}
@@ -97,6 +98,7 @@ func (eb *EventBus) Subscribe(event string, handler EventHandler) {
 
 // Subscribe 订阅事件。
 func (eb *GenericEventBus[T]) Subscribe(event string, handler EventHandlerWithContext[T]) {
+	// lib.Log.Debugf("Subscribe event: %s, handler: %v", event, handler)
 	if event == "" || handler == nil {
 		return
 	}
@@ -116,6 +118,7 @@ func (eb *GenericEventBus[T]) Subscribe(event string, handler EventHandlerWithCo
 // Unsubscribe removes a handler for a specific event.
 // If event is empty or handler is nil, it does nothing
 func (eb *EventBus) Unsubscribe(event string, handler EventHandler) {
+	// lib.Log.Debugf("Unsubscribe event: %s, handler: %v", event, handler)
 	if event == "" || handler == nil {
 		return
 	}
@@ -135,6 +138,7 @@ func (eb *EventBus) Unsubscribe(event string, handler EventHandler) {
 
 // Once subscribes a handler that will be called only once for the event.
 func (eb *EventBus) Once(event string, handler EventHandler) {
+	// lib.Log.Debugf("Once event: %s, handler: %v", event, handler)
 	var wrapper EventHandler
 	wrapper = func(msg *EventMessage) {
 		eb.Unsubscribe(event, wrapper)
@@ -146,6 +150,7 @@ func (eb *EventBus) Once(event string, handler EventHandler) {
 // SubscribePattern adds a handler for events matching a pattern (e.g. "user.*").
 // 支持简单的前缀通配符（如 "user.*" 匹配所有以 "user." 开头的事件）。
 func (eb *EventBus) SubscribePattern(pattern string, handler EventHandler) {
+	// lib.Log.Debugf("SubscribePattern pattern: %s, handler: %v", pattern, handler)
 	if pattern == "" || handler == nil {
 		return
 	}
@@ -161,6 +166,7 @@ func (eb *EventBus) SubscribePattern(pattern string, handler EventHandler) {
 
 // UnsubscribePattern removes a pattern handler.
 func (eb *EventBus) UnsubscribePattern(pattern string, handler EventHandler) {
+	// lib.Log.Debugf("UnsubscribePattern pattern: %s, handler: %v", pattern, handler)
 	if pattern == "" || handler == nil {
 		return
 	}
@@ -176,6 +182,7 @@ func (eb *EventBus) UnsubscribePattern(pattern string, handler EventHandler) {
 
 // Publish triggers all handlers subscribed to an event.
 func (eb *EventBus) Publish(event string, data interface{}) {
+	// lib.Log.Debugf("Publish event: %s, data: %v", event, data)
 	eb.lock.RLock()
 	handlers := append([]EventHandler(nil), eb.listeners[event]...)
 	for _, ph := range eb.patternHandlers {
@@ -203,6 +210,7 @@ func (eb *EventBus) Publish(event string, data interface{}) {
 
 // Publish 支持 context、超时、日志。
 func (eb *GenericEventBus[T]) Publish(ctx context.Context, event string, data T, timeout time.Duration) {
+	// lib.Log.Debugf("Publish event: %s, data: %v", event, data)
 	eb.lock.RLock()
 	handlers := append([]EventHandlerWithContext[T](nil), eb.listeners[event]...)
 	for _, ph := range eb.patternHandlers {
@@ -235,6 +243,7 @@ func (eb *GenericEventBus[T]) Publish(ctx context.Context, event string, data T,
 // SyncPublish triggers all handlers synchronously (in the current goroutine).
 // If any handler panic, it will be recovered.
 func (eb *EventBus) SyncPublish(event string, data interface{}) {
+	// lib.Log.Debugf("SyncPublish event: %s, data: %v", event, data)
 	eb.lock.RLock()
 	handlers := append([]EventHandler(nil), eb.listeners[event]...)
 	for _, ph := range eb.patternHandlers {

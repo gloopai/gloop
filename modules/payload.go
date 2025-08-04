@@ -153,8 +153,8 @@ func (r *ResponsePayload) List(list interface{}, page int, pagesize int, total i
 	data["pagesize"] = pagesize
 	data["total"] = total
 	format := make(map[string]interface{})
-	format["create_time"] = "create_time"
-	format["update_time"] = "update_time"
+	// format["create_time"] = "create_time"
+	// format["update_time"] = "update_time"
 	resList, _ := r.ListFormatCreateTimeAndUpdateTime(list, format)
 	data["list"] = resList
 	return ResponsePayload{
