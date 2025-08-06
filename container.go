@@ -97,9 +97,6 @@ func (c *Container) doInitComponents() {
 // 初始化所有组件
 func (c *Container) doRegComponentsService() {
 	for _, comp := range c.components {
-		comp.SetContext(&modules.ComponentContext{
-			Node: c.Node,
-		})
 		comp.RegisterService()
 	}
 }
