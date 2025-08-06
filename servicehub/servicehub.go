@@ -6,6 +6,28 @@ import (
 	"github.com/gloopai/gloop/lib"
 )
 
+/**
+
+// 提供 bot 信息查询服务
+servicehub.RegisterToService(webhookconst.SERVICE_BOT_INFO, func(req *model.BotMateReq) (*model.BotMeta, error) {
+	return &model.BotMeta{
+		Guid: "add",
+	}, nil
+})
+
+if servicehub.GetHubInstance().Has(webhookconst.SERVICE_BOT_INFO) {
+		resp, err := servicehub.CallFromService[*model.BotMateReq, *model.BotMeta](webhookconst.SERVICE_BOT_INFO, &model.BotMateReq{
+			Guid: "example-guid",
+		})
+		if err != nil {
+			fmt.Println("调用失败:", err)
+		} else {
+			fmt.Println("调用结果:", resp.Guid) // 输出 5
+		}
+	}
+
+*/
+
 var (
 	singleton     *ServiceHub
 	singletonOnce sync.Once
@@ -52,8 +74,13 @@ func Register[Req any, Resp any](h *ServiceHub, name string, fn ServiceFunc[Req,
 	for _, o := range opts {
 		o(&opt)
 	}
-	if _, exists := h.services[name]; exists && !opt.allowOverride {
-		return &ErrServiceExists{name}
+	if _, exists := h.services[name]; exists {
+		if !opt.allowOverride {
+			lib.Log.Errorf("[ServiceHub] service '%s' already registered, duplicate registration is not allowed", name)
+			return &ErrServiceExists{name}
+		}
+		// 允许覆盖时，打印警告
+		lib.Log.Warnf("[ServiceHub] service '%s' is being overridden", name)
 	}
 	h.services[name] = serviceEntry{fn: fn, description: opt.description}
 	return nil
