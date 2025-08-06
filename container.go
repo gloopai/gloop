@@ -68,6 +68,7 @@ func (c *Container) Serve() {
 	// c.Node.Start()
 
 	c.doInitComponents()
+	c.doRegComponentsService()
 	c.doStartComponents()
 
 	signalChan := make(chan os.Signal, 1)
@@ -90,6 +91,16 @@ func (c *Container) doInitComponents() {
 			Node: c.Node,
 		})
 		comp.Init()
+	}
+}
+
+// 初始化所有组件
+func (c *Container) doRegComponentsService() {
+	for _, comp := range c.components {
+		comp.SetContext(&modules.ComponentContext{
+			Node: c.Node,
+		})
+		comp.RegisterService()
 	}
 }
 
