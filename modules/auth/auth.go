@@ -36,6 +36,15 @@ func (a *Auth) Init() {
 	}
 
 	a.JWTManager = NewJWTManager(a.Config.JWTOptions)
+
+	// 初始数 telegram 用户表
+	if a.Config.TelegramBotToken != "" {
+		err = (&TelegramUser{}).EnsureTable(a.db.Db)
+		if err != nil {
+			lib.Log.Error("Failed to ensure telegram user table exists:", err)
+			return
+		}
+	}
 }
 
 func (a *Auth) Start() error {
@@ -104,6 +113,29 @@ func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
 	resmap["token"] = token
 
 	return modules.Response.Success(resmap)
+}
+
+// 通过 Telegram 登录
+func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayload {
+	type queryObject struct {
+		InitData string `json:"init_data"`
+	}
+	var query queryObject
+	err := req.Unmarshal(&query)
+	if err != nil {
+		return modules.Response.Error(err.Error())
+	}
+
+	telegramUser := &TelegramUser{}
+	err = telegramUser.Parse(a.Config.TelegramBotToken, query.InitData)
+	if err != nil {
+		return modules.Response.Error(fmt.Sprintf("Telegram parse error: %s", err.Error()))
+	}
+
+	fmt.Println(query.InitData)
+
+	// telegramUser, err := LoginUserByTelegram(a.db.Db, query.InitData)
+	return modules.Response.Success("")
 }
 
 /* 获取用户信息 */

@@ -1,6 +1,7 @@
 package servicehub
 
 import (
+	"reflect"
 	"sync"
 
 	"github.com/gloopai/gloop/lib"
@@ -112,13 +113,13 @@ func Call[Req any, Resp any](h *ServiceHub, name string, req Req) (Resp, error) 
 	if !exists {
 		var zero Resp
 		// 红色: \033[31m
-		lib.Log.Error("service not found!!", "name", name)
+		lib.Log.Error("service not found!!", "name [", name, "]")
 		return zero, &ErrServiceNotFound{name}
 	}
 	typedFn, ok := entry.fn.(ServiceFunc[Req, Resp])
 	if !ok {
 		var zero Resp
-		lib.Log.Error("mservice type mismatch!!", "name", name)
+		lib.Log.Error("mservice type mismatch!!", "name [", name, "]", " type [", reflect.TypeOf(entry.fn), "]")
 		return zero, &ErrServiceType{name}
 	}
 	return typedFn(req)
