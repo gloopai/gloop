@@ -195,6 +195,10 @@ func (s *Site) AddPayloadRoute(pattern string) {
 
 // 提取公共逻辑到辅助函数
 func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *modules.RequestAuth) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	// 处理预检请求
 	if r.Method != http.MethodPost {
 		modules.WriteJSONResponse(w, modules.ResponsePayload{
 			Code:    http.StatusMethodNotAllowed,
@@ -243,6 +247,10 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 	}
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
 		if s.Auth == nil {
 			modules.WriteJSONResponse(w, modules.ResponsePayload{
 				Code:    http.StatusInternalServerError,
