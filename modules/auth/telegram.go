@@ -52,12 +52,15 @@ func (a *AuthData) FromUrls(values url.Values) error {
 }
 
 type TelegramUser struct {
-	Id         int64  `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserId     int64  `gorm:"not null;index" json:"user_id"`
-	TelegramId int64  `gorm:"not null;uniqueIndex" json:"telegram_id"`
-	InitData   string `gorm:"type:text" json:"init_data"`
-	CreateTime int64  `gorm:"autoCreateTime" json:"create_time"`
-	UpdateTime int64  `gorm:"autoUpdateTime" json:"update_time"`
+	Id           int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserId       int64  `gorm:"not null;" json:"user_id"`
+	TelegramId   int64  `gorm:"not null;" json:"telegram_id"`
+	FirstName    string `gorm:"varchar(255)" json:"first_name"`
+	LastName     string `gorm:"varchar(255)" json:"last_name"`
+	LanguageCode string `gorm:"varchar(10)" json:"language_code"`
+	InitData     string `gorm:"type:text" json:"init_data"`
+	CreateTime   int64  `gorm:"autoCreateTime" json:"create_time"`
+	UpdateTime   int64  `gorm:"autoUpdateTime" json:"update_time"`
 }
 
 func (u *TelegramUser) TableName() string {
@@ -73,7 +76,7 @@ func (t *TelegramUser) EnsureTable(db *gorm.DB) error {
 }
 
 // / 解析初始化数据
-func (t *TelegramUser) Parse(botToken string, initData string) error {
+func (t *TelegramUser) parse(botToken string, initData string) (*AuthData, error) {
 	hash, dataCheckString, authData := t.parseInitData(initData)
 
 	if botToken != "" {
@@ -88,15 +91,17 @@ func (t *TelegramUser) Parse(botToken string, initData string) error {
 		key := hex.EncodeToString(h.Sum(nil))
 
 		if key != hash {
-			return fmt.Errorf("invalid telegram init data: signature mismatch")
+			return nil, fmt.Errorf("invalid telegram init data: signature mismatch")
 		}
 	}
-	fmt.Println(authData)
 
 	t.UserId = authData.User.ID
 	t.TelegramId = authData.User.ID
+	t.FirstName = authData.User.FirstName
+	t.LastName = authData.User.LastName
+	t.LanguageCode = authData.User.LanguageCode
 	t.InitData = initData
-	return nil
+	return &authData, nil
 }
 
 // 解析初始化数据，返回 hash 和 data_check_string
@@ -118,4 +123,52 @@ func (a *TelegramUser) parseInitData(initData string) (string, string, AuthData)
 	dataCheckString := strings.Join(v, "\n")
 
 	return hash, dataCheckString, authData
+}
+
+// 通过 telegrame 的默认账户格式
+func (a *TelegramUser) createNewUser(telegramId int64) *User {
+	user := &User{
+		Username: fmt.Sprintf("tg_user_%d", telegramId),
+		Password: "", // Telegram 用户不需要密码
+		Level:    "user",
+		Email:    fmt.Sprintf("tg_user_%d@telegram", telegramId),
+		Phone:    "1234567890",
+		Nickname: fmt.Sprintf("tg_user_%d", telegramId),
+	}
+	return user
+}
+
+// 登录
+func (a *TelegramUser) Login(db *gorm.DB, initData string, botToken string) (*TelegramUser, error) {
+	telegramUser := &TelegramUser{}
+	_, err := telegramUser.parse(botToken, initData)
+	if err != nil {
+		return nil, fmt.Errorf("Telegram parse error: %s", err.Error())
+	}
+
+	// 检查用户是否存在
+	var existingUser TelegramUser
+	result := db.Where("telegram_id = ?", telegramUser.TelegramId).First(&existingUser)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			// 先创建主账号
+			mainUser := a.createNewUser(telegramUser.TelegramId)
+			err := mainUser.Create(db)
+			if err != nil {
+				return nil, err
+			}
+			telegramUser.UserId = mainUser.Id
+
+			// 用户不存在，创建新用户
+			if err := db.Create(telegramUser).Error; err != nil {
+				return nil, err
+			}
+			return telegramUser, nil
+		} else {
+			return nil, result.Error
+		}
+	}
+
+	// 用户已存在，返回现有用户
+	return &existingUser, nil
 }

@@ -127,15 +127,18 @@ func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayl
 	}
 
 	telegramUser := &TelegramUser{}
-	err = telegramUser.Parse(a.Config.TelegramBotToken, query.InitData)
+	_, err = telegramUser.Login(a.db.Db, query.InitData, a.Config.TelegramBotToken)
 	if err != nil {
 		return modules.Response.Error(fmt.Sprintf("Telegram parse error: %s", err.Error()))
 	}
 
-	fmt.Println(query.InitData)
+	token, err := a.JWTManager.GenerateToken(modules.RequestAuth{
+		UserId:   telegramUser.UserId,
+		Username: "", // TelegramUser struct does not have a Username field, you might want to add it or handle differently
+	})
 
 	// telegramUser, err := LoginUserByTelegram(a.db.Db, query.InitData)
-	return modules.Response.Success("")
+	return modules.Response.Success(map[string]interface{}{"token": token})
 }
 
 /* 获取用户信息 */

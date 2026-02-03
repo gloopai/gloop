@@ -69,6 +69,25 @@ func EnsureAuthTableExists(db *gorm.DB) error {
 	return nil
 }
 
+// 创建
+func (u *User) Create(db *gorm.DB) error {
+	u.CreateTime = time.Now().Unix()
+	u.UpdateTime = time.Now().Unix()
+	if err := db.Create(u).Error; err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+	return nil
+}
+
+// 更新
+func (u *User) Update(db *gorm.DB, updateItem map[string]interface{}) error {
+	updateItem["update_time"] = time.Now().Unix()
+	if err := db.Model(u).Updates(updateItem).Error; err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
+}
+
 // Add a method for user registration
 func RegisterUser(db *gorm.DB, username, password, email string) error {
 	if username == "" || password == "" || email == "" {
