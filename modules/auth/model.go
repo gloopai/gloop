@@ -15,21 +15,21 @@ const (
 )
 
 type User struct {
-	Id            int64  `gorm:"primaryKey;autoIncrement" json:"id"`
-	Username      string `gorm:"size:255;not null" json:"username"`
-	Password      string `gorm:"size:255;not null" json:"password"`
-	Avatar        string `gorm:"size:255" json:"avatar"`
-	Level         string `gorm:"size:50" json:"level"`
-	Email         string `gorm:"size:255" json:"email"`
-	Phone         string `gorm:"size:20" json:"phone"`
-	Nickname      string `gorm:"size:255" json:"nickname"`
-	Status        int    `gorm:"default:1" json:"status"`         // 1: active, 0: inactive
-	MFAEnabled    bool   `gorm:"default:0" json:"mfa_enabled"`    // 1: enabled, 0: disabled
-	TwoFactorCode string `gorm:"size:255" json:"two_factor_code"` // 用于存储二次验证代码
-	CreateTime    int64  `gorm:"autoCreateTime" json:"create_time"`
-	UpdateTime    int64  `gorm:"autoUpdateTime" json:"update_time"`
-	LastLoginTime int64  `gorm:"default:0" json:"last_login_time"` // 数据库中记录最后一次登录时间
-	Token         string `gorm:"-" json:"token"`                   // 不参与数据库表处理
+	Id            int64  `gorm:"column:id;type:bigint;primaryKey;" json:"id"`
+	Username      string `gorm:"column:username;type:varchar(100);not null;" json:"username"`
+	Password      string `gorm:"column:password;type:varchar(100);not null;" json:"password"`
+	Avatar        string `gorm:"column:avatar;type:varchar(500);not null;" json:"avatar"`
+	Level         string `gorm:"column:level;type:varchar(20);not null;" json:"level"`
+	Email         string `gorm:"column:email;type:varchar(200);not null;" json:"email"`
+	Phone         string `gorm:"column:phone;type:varchar(20);not null;" json:"phone"`
+	Nickname      string `gorm:"column:nickname;type:varchar(200);not null;" json:"nickname"`
+	Status        int8   `gorm:"column:status;type:tinyint;not null;default:0;" json:"status"`
+	MfaEnabled    int8   `gorm:"column:mfa_enabled;type:tinyint;not null;default:0;" json:"mfa_enabled"`
+	TwoFactorCode string `gorm:"column:two_factor_code;type:varchar(200);not null;default:0;" json:"two_factor_code"`
+	CreateTime    int64  `gorm:"column:create_time;type:bigint;not null;" json:"create_time"`
+	UpdateTime    int64  `gorm:"column:update_time;type:bigint;not null;" json:"update_time"`
+	LastLoginTime int32  `gorm:"column:last_login_time;type:int;not null;" json:"last_login_time"`
+	Token         string `gorm:"-" json:"token"` // 不参与数据库表处理
 }
 
 func (u *User) TableName() string {

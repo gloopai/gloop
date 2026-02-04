@@ -126,6 +126,8 @@ func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayl
 		return modules.Response.Error(err.Error())
 	}
 
+	fmt.Println(query.InitData)
+
 	telegramUser := &TelegramUser{}
 	_, err = telegramUser.Login(a.db.Db, query.InitData, a.Config.TelegramBotToken)
 	if err != nil {

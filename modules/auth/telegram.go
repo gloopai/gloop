@@ -52,15 +52,15 @@ func (a *AuthData) FromUrls(values url.Values) error {
 }
 
 type TelegramUser struct {
-	Id           int64  `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserId       int64  `gorm:"not null;" json:"user_id"`
-	TelegramId   int64  `gorm:"not null;" json:"telegram_id"`
-	FirstName    string `gorm:"varchar(255)" json:"first_name"`
-	LastName     string `gorm:"varchar(255)" json:"last_name"`
-	LanguageCode string `gorm:"varchar(10)" json:"language_code"`
-	InitData     string `gorm:"type:text" json:"init_data"`
-	CreateTime   int64  `gorm:"autoCreateTime" json:"create_time"`
-	UpdateTime   int64  `gorm:"autoUpdateTime" json:"update_time"`
+	Id           int64  `gorm:"column:id;type:bigint;primaryKey;" json:"id"`
+	UserId       int64  `gorm:"column:user_id;type:bigint;not null;" json:"user_id"`
+	TelegramId   int64  `gorm:"column:telegram_id;type:bigint;not null;" json:"telegram_id"`
+	FirstName    string `gorm:"column:first_name;type:varchar(100);not null;" json:"first_name"`
+	LastName     string `gorm:"column:last_name;type:varchar(200);not null;" json:"last_name"`
+	LanguageCode string `gorm:"column:language_code;type:varchar(10);not null;" json:"language_code"`
+	InitData     string `gorm:"column:init_data;type:text;" json:"init_data"`
+	CreateTime   int64  `gorm:"column:create_time;type:bigint;not null;" json:"create_time"`
+	UpdateTime   int64  `gorm:"column:update_time;type:bigint;not null;" json:"update_time"`
 }
 
 func (u *TelegramUser) TableName() string {
