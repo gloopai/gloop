@@ -15,8 +15,8 @@ type generate struct{}
 var Generate generate
 
 // 当前unix 时间戳
-func (g *generate) NowInt() int {
-	return int(time.Now().Unix())
+func (g *generate) NowInt() int64 {
+	return time.Now().Unix()
 }
 
 // uuid string

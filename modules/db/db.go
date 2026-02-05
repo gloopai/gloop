@@ -2,28 +2,25 @@ package db
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/gloopai/gloop/modules"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	_ "modernc.org/sqlite"
 )
 
 type DbService struct {
 	modules.Base
-	Id   string // 数据库 ID
-	Path string // 数据库路径
-	Db   *gorm.DB
+	Id  string // 数据库 ID
+	DSN string // 数据库连接字符串
+	Db  *gorm.DB
 }
 
 // NewDb 创建一个新的数据库实例
 func NewDb(opt DbOptions) *DbService {
 	return &DbService{
-		Path: opt.DbPath,
+		DSN: opt.DSN,
 	}
 }
 
@@ -35,48 +32,22 @@ func (d *DbService) Name() string {
 func (d *DbService) Init() {
 	d.printInfo()
 
-	// 检查数据库文件夹是否存在，不存在则创建
-	dir := filepath.Dir(d.Path)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			fmt.Printf("failed to create database directory: %v\n", err)
-			return
-		}
-	}
-
-	// 检查数据库文件是否存在，不存在则创建空文件
-	if _, err := os.Stat(d.Path); os.IsNotExist(err) {
-		file, err := os.Create(d.Path)
-		if err != nil {
-			fmt.Printf("failed to create database file: %v\n", err)
-			return
-		}
-		file.Close()
-	}
-
-	// 打印数据库文件绝对路径和权限
-	absPath, _ := filepath.Abs(d.Path)
-	info, err := os.Stat(d.Path)
-	if err == nil {
-		fmt.Printf("Database file absolute path: %s, mode: %v\n", absPath, info.Mode())
-	} else {
-		fmt.Printf("Database file stat error: %v\n", err)
-	}
-
 	// 设置 gorm 的日志级别
 	gormConfig := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn),
 	}
-	db, err := gorm.Open(sqlite.Open(d.Path), gormConfig)
+
+	// 连接 MySQL 数据库
+	db, err := gorm.Open(mysql.Open(d.DSN), gormConfig)
 	if err != nil {
 		fmt.Printf("failed to open database: %v\n", err)
 		d.Db = nil
 		return
 	}
+
 	// 将数据库连接保存到结构体中
 	d.Db = db
-	// lib.Log.Info("SQLite database initialized successfully")
+	fmt.Println("MySQL database initialized successfully")
 }
 
 /*  */
@@ -86,9 +57,9 @@ func (d *DbService) printInfo() {
 	infos := make([]string, 0, 2)
 	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
 	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
-	infos = append(infos, fmt.Sprintf("Path: %s", d.Path))
-	infos = append(infos, "driver: SQLITE")
-	modules.PrintBoxInfo(d.Name(), infos...)
+	infos = append(infos, fmt.Sprintf("DSN: %s", d.DSN))
+	infos = append(infos, "driver: MYSQL")
+	// modules.PrintBoxInfo(d.Name(), infos...)
 }
 
 // 提供一个方法来获取数据库连接
