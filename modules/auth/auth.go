@@ -22,7 +22,7 @@ func (a *Auth) Name() string {
 	return "auth"
 }
 func (a *Auth) Init() {
-	err := EnsureAuthTableExists(a.Context.DB.Conn)
+	err := EnsureAuthTableExists(a.Env.DB.Conn)
 	if err != nil {
 		lib.Log.Error("Failed to ensure auth table exists:", err)
 		return
@@ -36,7 +36,7 @@ func (a *Auth) Init() {
 
 	// 初始数 telegram 用户表
 	if a.Config.TelegramBotToken != "" {
-		err = (&TelegramUser{}).EnsureTable(a.Context.DB.Conn)
+		err = (&TelegramUser{}).EnsureTable(a.Env.DB.Conn)
 		if err != nil {
 			lib.Log.Error("Failed to ensure telegram user table exists:", err)
 			return
@@ -70,7 +70,7 @@ func (a *Auth) Register(req *modules.RequestPayload) modules.ResponsePayload {
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
-	err = RegisterUser(a.Context.DB.Conn, query.Username, query.Password, query.Email)
+	err = RegisterUser(a.Env.DB.Conn, query.Username, query.Password, query.Email)
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
@@ -91,7 +91,7 @@ func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
 		return modules.Response.Error(err.Error())
 	}
 
-	loggedInUser, err := LoginUser(a.Context.DB.Conn, query.Username, query.Password)
+	loggedInUser, err := LoginUser(a.Env.DB.Conn, query.Username, query.Password)
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
@@ -126,7 +126,7 @@ func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayl
 	fmt.Println(query.InitData)
 
 	telegramUser := &TelegramUser{}
-	_, err = telegramUser.Login(a.Context.DB.Conn, query.InitData, a.Config.TelegramBotToken)
+	_, err = telegramUser.Login(a.Env.DB.Conn, query.InitData, a.Config.TelegramBotToken)
 	if err != nil {
 		return modules.Response.Error(fmt.Sprintf("Telegram parse error: %s", err.Error()))
 	}

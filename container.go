@@ -98,7 +98,7 @@ func (c *Container) Serve() {
 // 初始化所有组件
 func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
-		comp.SetContext(&modules.ComponentContext{
+		comp.SetEnv(&modules.ComponentEnv{
 			Node:   c.Node,
 			DB:     c.Database,
 			Events: c.EventBus,
