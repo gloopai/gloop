@@ -28,9 +28,9 @@ type ContainerConfig struct {
 
 // NewContainer 创建一个容器
 func NewContainer() *Container {
-	config, err := loadWebhookOptions()
+	config, err := loadOptions()
 	if err != nil {
-		log.Fatalf("[NewWebhook] Failed to load webhook configuration: %v", err)
+		log.Fatalf("[NewContainer] Failed to load container configuration: %v", err)
 	}
 	lib.Log.SetLogLevel(config.LogLevel)
 	lib.Log.SetDebugEnabled(config.Debug)
@@ -56,7 +56,7 @@ func NewContainer() *Container {
 	return c
 }
 
-func loadWebhookOptions() (*ContainerConfig, error) {
+func loadOptions() (*ContainerConfig, error) {
 	var options *ContainerConfig
 	err := lib.Conf.LoadTOML("container.toml", &options)
 	if err != nil {
