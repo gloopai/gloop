@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gloopai/gloop/lib"
-	dbmodules "github.com/gloopai/gloop/modules/db"
+	dbmodules "github.com/gloopai/gloop/modules"
 	"gorm.io/gorm"
 )
 

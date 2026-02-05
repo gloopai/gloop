@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	dbmodules "github.com/gloopai/gloop/modules/db"
+	dbmodules "github.com/gloopai/gloop/modules"
 	"gorm.io/gorm"
 )
 
