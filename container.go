@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 )
@@ -16,6 +17,7 @@ type Container struct {
 	components []modules.Component
 	Node       *modules.Node
 	Database   *modules.DbService
+	EventBus   *events.EventBus
 }
 
 type ContainerConfig struct {
@@ -34,7 +36,8 @@ func NewContainer() *Container {
 	lib.Log.SetDebugEnabled(config.Debug)
 
 	c := &Container{
-		Config: config,
+		Config:   config,
+		EventBus: events.NewEventBus(),
 	}
 
 	if config.Db.DSN != "" {
@@ -96,8 +99,9 @@ func (c *Container) Serve() {
 func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
 		comp.SetContext(&modules.ComponentContext{
-			Node: c.Node,
-			DB:   c.Database,
+			Node:   c.Node,
+			DB:     c.Database,
+			Events: c.EventBus,
 		})
 		comp.Init()
 	}

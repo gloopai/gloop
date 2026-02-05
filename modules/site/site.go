@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/auth"
@@ -21,7 +20,6 @@ type Site struct {
 	// 在 Site 结构中添加 RouteCommandMap
 	RouteCommandMap *RouteCommandManager
 	Auth            *auth.Auth
-	events          *events.EventBus // 事件总线
 }
 
 // 初始化日志记录器
@@ -291,8 +289,4 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 /* 使用 auth 模块 */
 func (s *Site) UseAuth(auth *auth.Auth) {
 	s.Auth = auth
-}
-
-func (s *Site) UseEventBus(events *events.EventBus) {
-	s.events = events
 }
