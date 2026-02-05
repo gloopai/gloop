@@ -10,7 +10,6 @@ import (
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/auth"
-	"github.com/gloopai/gloop/modules/db"
 )
 
 // Site 代表一个具有可配置域和设置的 Web 服务器
@@ -23,7 +22,6 @@ type Site struct {
 	RouteCommandMap *RouteCommandManager
 	Auth            *auth.Auth
 	events          *events.EventBus // 事件总线
-	DbService       *db.DbService
 }
 
 // 初始化日志记录器
@@ -293,10 +291,6 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 /* 使用 auth 模块 */
 func (s *Site) UseAuth(auth *auth.Auth) {
 	s.Auth = auth
-}
-
-func (s *Site) UseDbService(db *db.DbService) {
-	s.DbService = db
 }
 
 func (s *Site) UseEventBus(events *events.EventBus) {

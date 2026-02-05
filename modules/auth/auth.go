@@ -5,19 +5,16 @@ import (
 
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
-	"github.com/gloopai/gloop/modules/db"
 )
 
 type Auth struct {
 	modules.Base
 	Config     AuthOptions // 认证配置
-	db         *db.DbService
 	JWTManager *JWTManager // JWT 管理器
 }
 
 func NewAuth(opt AuthOptions) *Auth {
 	return &Auth{
-		db:     opt.Db,
 		Config: opt,
 	}
 }
@@ -25,7 +22,7 @@ func (a *Auth) Name() string {
 	return "auth"
 }
 func (a *Auth) Init() {
-	err := EnsureAuthTableExists(a.db.Db)
+	err := EnsureAuthTableExists(a.Context.DB.Conn)
 	if err != nil {
 		lib.Log.Error("Failed to ensure auth table exists:", err)
 		return
@@ -39,7 +36,7 @@ func (a *Auth) Init() {
 
 	// 初始数 telegram 用户表
 	if a.Config.TelegramBotToken != "" {
-		err = (&TelegramUser{}).EnsureTable(a.db.Db)
+		err = (&TelegramUser{}).EnsureTable(a.Context.DB.Conn)
 		if err != nil {
 			lib.Log.Error("Failed to ensure telegram user table exists:", err)
 			return
@@ -73,7 +70,7 @@ func (a *Auth) Register(req *modules.RequestPayload) modules.ResponsePayload {
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
-	err = RegisterUser(a.db.Db, query.Username, query.Password, query.Email)
+	err = RegisterUser(a.Context.DB.Conn, query.Username, query.Password, query.Email)
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
@@ -94,7 +91,7 @@ func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
 		return modules.Response.Error(err.Error())
 	}
 
-	loggedInUser, err := LoginUser(a.db.Db, query.Username, query.Password)
+	loggedInUser, err := LoginUser(a.Context.DB.Conn, query.Username, query.Password)
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
@@ -129,7 +126,7 @@ func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayl
 	fmt.Println(query.InitData)
 
 	telegramUser := &TelegramUser{}
-	_, err = telegramUser.Login(a.db.Db, query.InitData, a.Config.TelegramBotToken)
+	_, err = telegramUser.Login(a.Context.DB.Conn, query.InitData, a.Config.TelegramBotToken)
 	if err != nil {
 		return modules.Response.Error(fmt.Sprintf("Telegram parse error: %s", err.Error()))
 	}

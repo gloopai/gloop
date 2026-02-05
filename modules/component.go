@@ -20,7 +20,7 @@ type Component interface {
 }
 
 type Base struct {
-	ctx *ComponentContext
+	Context *ComponentContext
 }
 
 // Name 组件名称
@@ -42,10 +42,10 @@ func (b *Base) Destroy() {}
 
 // SetContext 写入上下文
 func (b *Base) SetContext(ctx *ComponentContext) {
-	b.ctx = ctx
+	b.Context = ctx
 }
 
 // GetContext 读取上下文
 func (b *Base) GetContext() *ComponentContext {
-	return b.ctx
+	return b.Context
 }

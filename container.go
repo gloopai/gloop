@@ -15,11 +15,13 @@ type Container struct {
 	Config     *ContainerConfig
 	components []modules.Component
 	Node       *modules.Node
+	Database   *modules.DbService
 }
 
 type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
+	Db       modules.DbOptions
 }
 
 // NewContainer 创建一个容器
@@ -33,6 +35,11 @@ func NewContainer() *Container {
 
 	c := &Container{
 		Config: config,
+	}
+
+	if config.Db.DSN != "" {
+		dbService := modules.NewDb(config.Db)
+		c.Database = dbService
 	}
 
 	// node, err := modules.NewNode()
@@ -89,6 +96,7 @@ func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
 		comp.SetContext(&modules.ComponentContext{
 			Node: c.Node,
+			DB:   c.Database,
 		})
 		comp.Init()
 	}
@@ -122,5 +130,8 @@ func (c *Container) doPrintFrameworkInfo() {
 	infos := make([]string, 0, 7)
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
+	if c.Database != nil {
+		infos = append(infos, fmt.Sprintf("Database: %s", "mysql"))
+	}
 	modules.PrintBoxInfo("Container", infos...)
 }
