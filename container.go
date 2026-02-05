@@ -39,6 +39,7 @@ func NewContainer() *Container {
 
 	if config.Db.DSN != "" {
 		dbService := modules.NewDb(config.Db)
+		dbService.Init()
 		c.Database = dbService
 	}
 
