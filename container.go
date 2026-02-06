@@ -144,6 +144,7 @@ func (c *Container) doDestroyComponents() {
 	for _, comp := range c.components {
 		comp.Destroy()
 	}
+	lib.Log.Info("Container stopped")
 }
 
 // 打印框架信息
