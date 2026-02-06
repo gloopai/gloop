@@ -32,7 +32,7 @@ func (d *DbService) Name() string {
 
 // 修改 Init 方法以保存数据库连接，并提供一个方法获取连接
 func (d *DbService) Init() {
-	d.printInfo()
+	// d.printInfo()
 
 	// 设置 gorm 的日志级别
 	gormConfig := &gorm.Config{

@@ -34,14 +34,6 @@ func (a *Auth) Init() {
 
 	a.JWTManager = NewJWTManager(a.Config.JWTOptions)
 
-	// 初始数 telegram 用户表
-	if a.Config.TelegramBotToken != "" {
-		err = (&TelegramUser{}).EnsureTable(a.Env.DB.Conn)
-		if err != nil {
-			lib.Log.Error("Failed to ensure telegram user table exists:", err)
-			return
-		}
-	}
 }
 
 func (a *Auth) Start() error {
@@ -122,9 +114,6 @@ func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayl
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
-
-	fmt.Println(query.InitData)
-
 	telegramUser := &TelegramUser{}
 	_, err = telegramUser.Login(a.Env.DB.Conn, query.InitData, a.Config.TelegramBotToken)
 	if err != nil {

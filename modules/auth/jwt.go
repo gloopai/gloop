@@ -8,8 +8,8 @@ import (
 )
 
 type JWTManager struct {
-	secretKey     string
-	tokenDuration time.Duration
+	SecretKey     string
+	TokenDuration time.Duration
 }
 
 type AuthJwtClaims struct {
@@ -34,8 +34,8 @@ func NewJWTManager(opt JWTOptions) *JWTManager {
 	}
 
 	return &JWTManager{
-		secretKey:     opt.SecretKey,
-		tokenDuration: time.Duration(time.Hour * time.Duration(opt.TokenDuration)),
+		SecretKey:     opt.SecretKey,
+		TokenDuration: time.Duration(time.Hour * time.Duration(opt.TokenDuration)),
 	}
 }
 
@@ -44,11 +44,11 @@ func (j *JWTManager) GenerateToken(auth modules.RequestAuth) (string, error) {
 		UserId:   auth.UserId,
 		UserName: auth.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.tokenDuration)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.TokenDuration)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(j.secretKey))
+	return token.SignedString([]byte(j.SecretKey))
 }
 
 func (j *JWTManager) VerifyToken(tokenString string) (modules.RequestAuth, error) {
@@ -60,7 +60,7 @@ func (j *JWTManager) VerifyToken(tokenString string) (modules.RequestAuth, error
 			return nil, jwt.ErrSignatureInvalid
 		}
 		// 返回用于验证签名的密钥
-		return []byte(j.secretKey), nil
+		return []byte(j.SecretKey), nil
 	})
 
 	if err != nil {

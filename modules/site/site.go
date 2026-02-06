@@ -44,6 +44,16 @@ func (s *Site) Init() {
 		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
 	}
 
+	s.Auth = auth.NewAuth(auth.AuthOptions{
+		TelegramBotToken: s.Config.Auth.TelegramBotToken,
+		JWTOptions: auth.JWTOptions{
+			SecretKey:     s.Config.Auth.Jwt.SecretKey,
+			TokenDuration: s.Config.Auth.Jwt.TokenDuration,
+		},
+	})
+	s.Auth.SetEnv(s.GetEnv())
+	s.Auth.Init() // 初始化 auth 模块
+
 	// s.printInfo()
 
 	if s.mux == nil {

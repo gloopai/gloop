@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strings"
 
-	dbmodules "github.com/gloopai/gloop/modules"
 	"gorm.io/gorm"
 )
 
@@ -65,14 +64,6 @@ type TelegramUser struct {
 
 func (u *TelegramUser) TableName() string {
 	return "gloop_auth_user_telegram"
-}
-
-/* 表初始化检查 */
-func (t *TelegramUser) EnsureTable(db *gorm.DB) error {
-	if err := dbmodules.AutoMigrate(db, &TelegramUser{}); err != nil {
-		return err
-	}
-	return nil
 }
 
 // / 解析初始化数据

@@ -56,10 +56,13 @@ func NewContainer() *Container {
 
 	// 初始化 Site 组件
 	if config.Site.Port != 0 {
-		siteComponent := site.NewSite(config.Site)
-		siteComponent.Init()
-		siteComponent.Start()
-		c.Site = siteComponent
+		c.Site = site.NewSite(config.Site)
+		c.Site.SetEnv(&modules.ComponentEnv{
+			DB:     c.Database,
+			Events: c.EventBus,
+		})
+		c.Site.Init()
+		c.Site.Start()
 	}
 	// node, err := modules.NewNode()
 	// if err != nil {
