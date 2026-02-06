@@ -44,7 +44,7 @@ func (s *Site) Init() {
 		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
 	}
 
-	s.printInfo()
+	// s.printInfo()
 
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
@@ -286,7 +286,27 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 	})
 }
 
-/* 使用 auth 模块 */
-func (s *Site) UseAuth(auth *auth.Auth) {
-	s.Auth = auth
+// GetBindAddresses 返回当前 HTTP 服务器绑定的 IP 和端口列表
+func (s *Site) GetBindAddresses() []string {
+	addresses := make([]string, 0)
+
+	protocol := "http"
+	if s.Config.UseHTTPS {
+		protocol = "https"
+	}
+
+	// 构建绑定地址，如果绑定到所有接口（端口前缀为空或 ':'），则返回常见接口
+	address := fmt.Sprintf(":%d", s.Config.Port)
+
+	// 绑定到所有接口
+	if address[0] == ':' {
+		addresses = append(addresses, fmt.Sprintf("%s://0.0.0.0%s", protocol, address))
+		addresses = append(addresses, fmt.Sprintf("%s://[::]%s", protocol, address))
+		addresses = append(addresses, fmt.Sprintf("%s://localhost%s", protocol, address))
+	} else {
+		// 绑定到特定地址
+		addresses = append(addresses, fmt.Sprintf("%s://%s", protocol, address))
+	}
+
+	return addresses
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/modules/site"
 )
 
 type Container struct {
@@ -24,6 +25,7 @@ type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
 	Db       modules.DbOptions
+	Site     site.SiteOptions
 }
 
 // NewContainer 创建一个容器
@@ -40,12 +42,18 @@ func NewContainer() *Container {
 		EventBus: events.NewEventBus(),
 	}
 
+	// 数据库链接
 	if config.Db.DSN != "" {
 		dbService := modules.NewDb(config.Db)
 		dbService.Init()
 		c.Database = dbService
 	}
 
+	// 初始化 Site 组件
+	if config.Site.Port != 0 {
+		siteComponent := site.NewSite(config.Site)
+		siteComponent.Init()
+	}
 	// node, err := modules.NewNode()
 	// if err != nil {
 	// 	lib.Log.Fatal(err)
@@ -137,6 +145,9 @@ func (c *Container) doPrintFrameworkInfo() {
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
 	if c.Database != nil {
 		infos = append(infos, fmt.Sprintf("Database: %s", "mysql"))
+	}
+	if c.Config.Site.Port != 0 {
+		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
 	}
 	modules.PrintBoxInfo("Container", infos...)
 }
