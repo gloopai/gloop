@@ -13,12 +13,17 @@ import (
 	"github.com/gloopai/gloop/modules/site"
 )
 
+type ContainerProxy struct {
+	Site *site.Site
+}
+
 type Container struct {
 	Config     *ContainerConfig
 	components []modules.Component
 	Node       *modules.Node
 	Database   *modules.DbService
 	EventBus   *events.EventBus
+	Site       *site.Site
 }
 
 type ContainerConfig struct {
@@ -53,6 +58,8 @@ func NewContainer() *Container {
 	if config.Site.Port != 0 {
 		siteComponent := site.NewSite(config.Site)
 		siteComponent.Init()
+		siteComponent.Start()
+		c.Site = siteComponent
 	}
 	// node, err := modules.NewNode()
 	// if err != nil {
@@ -150,4 +157,11 @@ func (c *Container) doPrintFrameworkInfo() {
 		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
 	}
 	modules.PrintBoxInfo("Container", infos...)
+}
+
+// Proxy 获取容器的代理对象
+func (c *Container) Proxy() *ContainerProxy {
+	return &ContainerProxy{
+		Site: c.Site,
+	}
 }

@@ -49,7 +49,7 @@ func (d *DbService) Init() {
 
 	// 将数据库连接保存到结构体中
 	d.Conn = db
-	fmt.Println("MySQL database initialized successfully")
+	// fmt.Println("MySQL database initialized successfully")
 }
 
 /*  */

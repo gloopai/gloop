@@ -310,3 +310,10 @@ func (s *Site) GetBindAddresses() []string {
 
 	return addresses
 }
+
+func (s *Site) Proxy() *Proxy {
+	return &Proxy{
+		Site: s,
+		Auth: s.Auth,
+	}
+}
