@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/registry"
 )
 
@@ -26,4 +27,11 @@ func NewNode(config *NodeOptions) *Node {
 		Config: config,
 	}
 	return node
+}
+
+func (n *Node) Close() {
+	lib.Log.Infof("Node %s is closing", n.Config.Id)
+}
+func (n *Node) Destroy() {
+	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
 }

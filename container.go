@@ -72,8 +72,6 @@ func NewContainer() *Container {
 		DB:     c.Database,
 		Events: c.EventBus,
 	})
-	c.Node.Init()
-	c.Node.Start()
 
 	return c
 }
@@ -82,23 +80,23 @@ func loadOptions() (*ContainerConfig, error) {
 	var options *ContainerConfig
 	err := lib.Conf.LoadTOML("container.toml", &options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load webhook configuration: %v", err)
+		return nil, fmt.Errorf("failed to load configuration: %v", err)
 	}
 
 	return options, nil
 }
 
 func (c *Container) destroy() {
-	if c.Node != nil {
-		c.Node.Close()
-		c.Node.Destroy()
-	}
 	if c.Site != nil {
 		c.Site.Close()
 		c.Site.Destory()
 	}
 	if c.Database != nil {
 		c.Database.Close()
+	}
+	if c.Node != nil {
+		c.Node.Close()
+		c.Node.Destroy()
 	}
 }
 
@@ -111,8 +109,8 @@ func (c *Container) Add(components ...modules.Component) {
 func (c *Container) Serve() {
 	c.doPrintFrameworkInfo()
 	// 初始化节点
-	// c.Node.Init()
-	// c.Node.Start()
+	c.Node.Init()
+	c.Node.Start()
 
 	c.doInitComponents()
 	c.doRegComponentsService()
