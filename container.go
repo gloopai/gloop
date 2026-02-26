@@ -10,9 +10,9 @@ import (
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
-	"github.com/gloopai/gloop/modules/registry"
-	"github.com/gloopai/gloop/modules/registry/consul"
 	"github.com/gloopai/gloop/modules/site"
+	"github.com/gloopai/gloop/registry"
+	"github.com/gloopai/gloop/registry/consul"
 )
 
 type ContainerProxy struct {
@@ -34,7 +34,7 @@ type ContainerConfig struct {
 	Debug    bool
 	Db       modules.DbOptions
 	Site     site.SiteOptions
-	Consul   consul.ConsulOptions
+	Registry consul.ConsulOptions
 }
 
 // NewContainer 创建一个容器
@@ -69,9 +69,9 @@ func NewContainer() *Container {
 		c.Site.Start()
 	}
 
-	// 初始化 Consul 组件
-	if config.Consul.Addr != "" {
-		c.Registry = registry.NewRegistry(config.Consul)
+	// 初始化 Registry 组件
+	if config.Registry.Addr != "" {
+		c.Registry = registry.NewRegistry(config.Registry)
 		c.Registry.Init()
 		c.Registry.Start()
 	}
@@ -94,6 +94,20 @@ func loadOptions() (*ContainerConfig, error) {
 	}
 
 	return options, nil
+}
+
+func (c *Container) destroy() {
+	if c.Site != nil {
+		c.Site.Close()
+		c.Site.Destory()
+	}
+	if c.Registry != nil {
+		c.Registry.Close()
+		c.Registry.Destroy()
+	}
+	if c.Database != nil {
+		c.Database.Close()
+	}
 }
 
 // Add 添加组件
@@ -153,6 +167,8 @@ func (c *Container) doStartComponents() {
 
 // 销毁所有组件
 func (c *Container) doDestroyComponents() {
+	c.destroy()
+
 	for _, comp := range c.components {
 		comp.Destroy()
 	}
@@ -172,8 +188,8 @@ func (c *Container) doPrintFrameworkInfo() {
 	if c.Config.Site.Port != 0 {
 		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
 	}
-	if c.Config.Consul.Addr != "" {
-		infos = append(infos, fmt.Sprintf("Consul Addr: %s", c.Config.Consul.Addr))
+	if c.Config.Registry.Addr != "" {
+		infos = append(infos, fmt.Sprintf("Registry Addr: %s", c.Config.Registry.Addr))
 	}
 	modules.PrintBoxInfo("Container", infos...)
 }

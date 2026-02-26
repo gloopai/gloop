@@ -2,7 +2,7 @@ package registry
 
 import (
 	"github.com/gloopai/gloop/modules"
-	"github.com/gloopai/gloop/modules/registry/consul"
+	"github.com/gloopai/gloop/registry/consul"
 )
 
 type Registry struct {
