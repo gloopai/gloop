@@ -11,8 +11,6 @@ import (
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/site"
-	"github.com/gloopai/gloop/registry"
-	"github.com/gloopai/gloop/registry/consul"
 )
 
 type ContainerProxy struct {
@@ -26,7 +24,6 @@ type Container struct {
 	Database   *modules.DbService
 	EventBus   *events.EventBus
 	Site       *site.Site
-	Registry   *registry.Registry
 }
 
 type ContainerConfig struct {
@@ -34,7 +31,8 @@ type ContainerConfig struct {
 	Debug    bool
 	Db       modules.DbOptions
 	Site     site.SiteOptions
-	Registry consul.ConsulOptions
+	// Registry consul.ConsulOptions
+	Node modules.NodeOptions
 }
 
 // NewContainer 创建一个容器
@@ -69,19 +67,13 @@ func NewContainer() *Container {
 		c.Site.Start()
 	}
 
-	// 初始化 Registry 组件
-	if config.Registry.Addr != "" {
-		c.Registry = registry.NewRegistry(config.Registry)
-		c.Registry.Init()
-		c.Registry.Start()
-	}
-
-	// node, err := modules.NewNode()
-	// if err != nil {
-	// 	lib.Log.Fatal(err)
-	// 	os.Exit(0)
-	// }
-	// c.Node = node
+	c.Node = modules.NewNode(&config.Node)
+	c.Node.SetEnv(&modules.ComponentEnv{
+		DB:     c.Database,
+		Events: c.EventBus,
+	})
+	c.Node.Init()
+	c.Node.Start()
 
 	return c
 }
@@ -97,13 +89,13 @@ func loadOptions() (*ContainerConfig, error) {
 }
 
 func (c *Container) destroy() {
+	if c.Node != nil {
+		c.Node.Close()
+		c.Node.Destroy()
+	}
 	if c.Site != nil {
 		c.Site.Close()
 		c.Site.Destory()
-	}
-	if c.Registry != nil {
-		c.Registry.Close()
-		c.Registry.Destroy()
 	}
 	if c.Database != nil {
 		c.Database.Close()
@@ -188,9 +180,9 @@ func (c *Container) doPrintFrameworkInfo() {
 	if c.Config.Site.Port != 0 {
 		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
 	}
-	if c.Config.Registry.Addr != "" {
-		infos = append(infos, fmt.Sprintf("Registry Addr: %s", c.Config.Registry.Addr))
-	}
+	// if c.Config.Registry.Addr != "" {
+	// 	infos = append(infos, fmt.Sprintf("Registry Addr: %s", c.Config.Registry.Addr))
+	// }
 	modules.PrintBoxInfo("Container", infos...)
 }
 
