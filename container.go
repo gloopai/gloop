@@ -10,6 +10,8 @@ import (
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/modules/registry"
+	"github.com/gloopai/gloop/modules/registry/consul"
 	"github.com/gloopai/gloop/modules/site"
 )
 
@@ -24,6 +26,7 @@ type Container struct {
 	Database   *modules.DbService
 	EventBus   *events.EventBus
 	Site       *site.Site
+	Registry   *registry.Registry
 }
 
 type ContainerConfig struct {
@@ -31,6 +34,7 @@ type ContainerConfig struct {
 	Debug    bool
 	Db       modules.DbOptions
 	Site     site.SiteOptions
+	Consul   consul.ConsulOptions
 }
 
 // NewContainer 创建一个容器
@@ -64,6 +68,14 @@ func NewContainer() *Container {
 		c.Site.Init()
 		c.Site.Start()
 	}
+
+	// 初始化 Consul 组件
+	if config.Consul.Addr != "" {
+		c.Registry = registry.NewRegistry(config.Consul)
+		c.Registry.Init()
+		c.Registry.Start()
+	}
+
 	// node, err := modules.NewNode()
 	// if err != nil {
 	// 	lib.Log.Fatal(err)
@@ -159,6 +171,9 @@ func (c *Container) doPrintFrameworkInfo() {
 	}
 	if c.Config.Site.Port != 0 {
 		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
+	}
+	if c.Config.Consul.Addr != "" {
+		infos = append(infos, fmt.Sprintf("Consul Addr: %s", c.Config.Consul.Addr))
 	}
 	modules.PrintBoxInfo("Container", infos...)
 }
