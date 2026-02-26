@@ -8,7 +8,9 @@ import (
 // Node 组件
 type Node struct {
 	Base
-	Config *NodeOptions
+	NodeId   string
+	NodeName string
+	Config   *NodeOptions
 }
 
 type NodeOptions struct {
@@ -26,7 +28,18 @@ func NewNode(config *NodeOptions) *Node {
 	node := &Node{
 		Config: config,
 	}
+	node.NodeId = lib.Conf.GetString(config.Id, lib.Generate.Guid())
+	node.NodeName = lib.Conf.GetString(config.Name, "node")
 	return node
+}
+
+func (n *Node) Init() {
+
+}
+
+func (n *Node) Start() error {
+	// lib.Log.Infof("Node %s is starting at %s", n.Config.Name, n.Config.Addr)
+	return nil
 }
 
 func (n *Node) Close() {

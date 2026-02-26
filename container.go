@@ -170,6 +170,10 @@ func (c *Container) doPrintFrameworkInfo() {
 	modules.PrintFrameworkInfo()
 
 	infos := make([]string, 0, 7)
+	if c.Node != nil {
+		infos = append(infos, fmt.Sprintf("Node ID: %s", c.Node.NodeId))
+		infos = append(infos, fmt.Sprintf("Node Name: %s", c.Node.NodeName))
+	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
 	if c.Database != nil {

@@ -53,3 +53,10 @@ func (c *conf) LoadTOML(path string, v interface{}) error {
 
 	return nil
 }
+
+func (c *conf) GetString(v string, d string) string {
+	if v == "" {
+		return d
+	}
+	return v
+}
