@@ -13,7 +13,7 @@ type Node struct {
 	NodeId      string
 	NodeName    string
 	Config      *NodeOptions
-	transporter *ggrpc.Transport
+	transporter *ggrpc.Transporter
 }
 
 type NodeOptions struct {
@@ -38,7 +38,7 @@ func NewNode(config *NodeOptions) *Node {
 
 func (n *Node) Init() {
 	// 初始化 transporter
-	transporter, err := ggrpc.NewTransport(&ggrpc.Options{
+	transporter, err := ggrpc.NewTransporter(&ggrpc.Options{
 		Addr: n.Config.Addr,
 	})
 	if err != nil {
@@ -62,7 +62,7 @@ func (n *Node) Destroy() {
 	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
 }
 
-// 添加服务
+// 添加grpc服务
 func (n *Node) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
 	n.transporter.AddServiceProvider(name, desc, provider)
 }
