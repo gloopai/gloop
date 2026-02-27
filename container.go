@@ -73,7 +73,9 @@ func NewContainer() *Container {
 		Events: c.EventBus,
 	})
 	c.Node.Init()
-	c.Node.Start()
+	if err := c.Node.Start(); err != nil {
+		log.Fatalf("[NewContainer] failed to start node: %v", err)
+	}
 
 	return c
 }

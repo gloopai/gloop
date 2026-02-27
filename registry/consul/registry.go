@@ -2,6 +2,8 @@ package consul
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 
 	"github.com/gloopai/gloop/lib"
 	"github.com/hashicorp/consul/api"
@@ -14,15 +16,18 @@ type Registry struct {
 	client      *api.Client
 }
 
-func NewRegistry(ops *Options) *Registry {
+func NewRegistry(ops *Options) (*Registry, error) {
 	config := api.DefaultConfig()
 	config.Address = lib.Conf.GetString(ops.Addr, "127.0.0.1:8500")
-	client, _ := api.NewClient(config)
+	client, err := api.NewClient(config)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Registry{
 		config: ops,
 		client: client,
-	}
+	}, nil
 }
 
 // 注册服务
@@ -35,7 +40,7 @@ func (r *Registry) Register(serviceID, serviceName, serviceAddr string, serviceP
 		Port:    servicePort,
 		Address: serviceAddr,
 		Check: &api.AgentServiceCheck{
-			GRPC:     fmt.Sprintf("%s", serviceAddr),
+			GRPC:     net.JoinHostPort(serviceAddr, strconv.Itoa(servicePort)),
 			Interval: "10s",
 			Timeout:  "5s",
 		},
@@ -44,12 +49,16 @@ func (r *Registry) Register(serviceID, serviceName, serviceAddr string, serviceP
 }
 
 // 注消服务
-func (r *Registry) Close() {
-	r.client.Agent().ServiceDeregister(r.serviceId)
+func (r *Registry) Close() error {
+	return r.client.Agent().ServiceDeregister(r.serviceId)
 }
 
 // 获取服务链接
 func (r *Registry) GetServiceTarget(serviceName string) (string, error) {
-	target := fmt.Sprintf("consul://%s/%s?wait=14s", r.config.Addr, serviceName)
+	addr := ""
+	if addr == "" && r.config != nil {
+		addr = lib.Conf.GetString(r.config.Addr, "127.0.0.1:8500")
+	}
+	target := fmt.Sprintf("consul://%s/%s?wait=14s", addr, serviceName)
 	return target, nil
 }
