@@ -14,8 +14,9 @@ import (
 )
 
 type Transporter struct {
-	listenAddr  string
-	exposeAddr  string
+	ListenAddr  string
+	ExposeAddr  string
+	ExposePort  int
 	server      *grpc.Server
 	sfg         singleflight.Group
 	connections sync.Map
@@ -32,24 +33,25 @@ func NewTransporter(opts *Options) (*Transporter, error) {
 	// grpc.UnaryInterceptor(grpcserverlib.NewRateLimiter(1).UnaryInterceptor),
 	)
 	return &Transporter{
-		listenAddr: listenAddr,
-		exposeAddr: exposeAddr,
+		ListenAddr: listenAddr,
+		ExposeAddr: exposeAddr,
 		server:     s,
 	}, nil
 }
 
 // 启动 grpc 服务
 func (t *Transporter) Start() error {
-	addr, err := net.ResolveTCPAddr("tcp", t.listenAddr)
+	addr, err := net.ResolveTCPAddr("tcp", t.ListenAddr)
 	if err != nil {
 		return err
 	}
+	t.ExposePort = addr.Port
 
 	lis, err := net.Listen(addr.Network(), addr.String())
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	lib.Log.Infof("gRPC server is listening at %v", lis.Addr())
+	// lib.Log.Infof("gRPC server is listening at %v export: %v", addr.String(), t.ExposeAddr)
 	return t.server.Serve(lis)
 }
 

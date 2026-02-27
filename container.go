@@ -72,6 +72,8 @@ func NewContainer() *Container {
 		DB:     c.Database,
 		Events: c.EventBus,
 	})
+	c.Node.Init()
+	c.Node.Start()
 
 	return c
 }
@@ -108,9 +110,6 @@ func (c *Container) Add(components ...modules.Component) {
 // Serve 启动容器
 func (c *Container) Serve() {
 	c.doPrintFrameworkInfo()
-	// 初始化节点
-	c.Node.Init()
-	c.Node.Start()
 
 	c.doInitComponents()
 	c.doRegComponentsService()
@@ -173,6 +172,11 @@ func (c *Container) doPrintFrameworkInfo() {
 	if c.Node != nil {
 		infos = append(infos, fmt.Sprintf("Node ID: %s", c.Node.NodeId))
 		infos = append(infos, fmt.Sprintf("Node Name: %s", c.Node.NodeName))
+		if c.Node != nil {
+			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.Node.GetServiceListen()))
+			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.Node.GetServiceAddr()))
+			infos = append(infos, fmt.Sprintf("gRPC Port: %d", c.Node.GetServicePort()))
+		}
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))

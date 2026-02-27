@@ -46,6 +46,10 @@ func (n *Node) Init() {
 	}
 	n.transporter = transporter
 
+	// 初始化注册中心
+	consul.NewRegistry(&n.Config.Consul)
+	// registry.Register(n.NodeId, n.NodeName, n.transporter.ExposeAddr)
+
 }
 
 func (n *Node) Start() error {
@@ -65,6 +69,20 @@ func (n *Node) Destroy() {
 // 添加grpc服务
 func (n *Node) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
 	n.transporter.AddServiceProvider(name, desc, provider)
+}
+
+func (n *Node) GetServiceListen() string {
+	return n.transporter.ListenAddr
+}
+
+// 获取服务地址
+func (n *Node) GetServiceAddr() string {
+	return n.transporter.ExposeAddr
+}
+
+// 获取服务端口
+func (n *Node) GetServicePort() int {
+	return n.transporter.ExposePort
 }
 
 // 获取grpc客户端连接
