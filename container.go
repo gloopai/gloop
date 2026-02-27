@@ -94,7 +94,7 @@ func loadOptions() (*ContainerConfig, error) {
 func (c *Container) destroy() {
 	if c.Site != nil {
 		c.Site.Close()
-		c.Site.Destory()
+		c.Site.Destroy()
 	}
 	if c.Database != nil {
 		c.Database.Close()
@@ -113,9 +113,7 @@ func (c *Container) Add(components ...modules.Component) {
 // Serve 启动容器
 func (c *Container) Serve() {
 	c.doPrintFrameworkInfo()
-
 	c.doInitComponents()
-	c.doRegComponentsService()
 	c.doStartComponents()
 
 	signalChan := make(chan os.Signal, 1)
@@ -146,13 +144,7 @@ func (c *Container) doInitComponents() {
 		})
 		comp.Init()
 	}
-}
-
-// 初始化所有组件
-func (c *Container) doRegComponentsService() {
-	for _, comp := range c.components {
-		comp.RegisterService()
-	}
+	lib.Log.Info("🟢 Components INIT Complet!!")
 }
 
 // 启动所有组件
@@ -163,8 +155,10 @@ func (c *Container) doStartComponents() {
 				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
 			}
 		}()
-		go comp.Start()
+		comp.Start()
 	}
+
+	lib.Log.Info("🟢 Components START Complet!!")
 }
 
 // 销毁所有组件
@@ -204,9 +198,6 @@ func (c *Container) doPrintFrameworkInfo() {
 	if c.Config.Site.Port != 0 {
 		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
 	}
-	// if c.Config.Registry.Addr != "" {
-	// 	infos = append(infos, fmt.Sprintf("Registry Addr: %s", c.Config.Registry.Addr))
-	// }
 	modules.PrintBoxInfo("Container", infos...)
 }
 

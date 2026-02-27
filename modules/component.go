@@ -5,8 +5,6 @@ type Component interface {
 	Name() string
 	// Init 初始化组件
 	Init()
-	// 注册服务
-	RegisterService()
 	// Start 启动组件
 	Start() error
 	// Close 关闭组件
@@ -28,8 +26,6 @@ func (b *Base) Name() string { return "base" }
 
 // Init 初始化组件
 func (b *Base) Init() {}
-
-func (b *Base) RegisterService() {}
 
 // Start 启动组件
 func (b *Base) Start() error { return nil }

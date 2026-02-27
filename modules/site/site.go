@@ -61,30 +61,6 @@ func (s *Site) Init() {
 	}
 }
 
-func (s *Site) Close() {}
-
-func (s *Site) Destory() {}
-
-// // 打印组件信息
-func (s *Site) printInfo() {
-	infos := make([]string, 0, 7)
-	infos = append(infos, fmt.Sprintf("ID: %s", s.Config.Id))
-	// infos = append(infos, fmt.Sprintf("Name: %s", s.Name()))
-	infos = append(infos, fmt.Sprintf("Port: %d", s.Config.Port))
-	infos = append(infos, fmt.Sprintf("UseEmbed: %t", s.Config.UseEmbed))
-	infos = append(infos, fmt.Sprintf("BaseRoot: %s", s.Config.BaseRoot))
-	infos = append(infos, fmt.Sprintf("UseHTTPS: %t", s.Config.UseHTTPS))
-	if s.Config.UseHTTPS {
-		infos = append(infos, fmt.Sprintf("TLSCert: %s", s.Config.Cert.CertFile))
-		infos = append(infos, fmt.Sprintf("TLSKey: %s", s.Config.Cert.KeyFile))
-	}
-
-	infos = append(infos, fmt.Sprintf("ForceIndexHTML: %t", s.Config.ForceIndexHTML))
-	infos = append(infos, fmt.Sprintf("StaticFileCacheTTL: %s", s.Config.StaticFileCacheTTL))
-
-	modules.PrintBoxInfo(s.Name(), infos...)
-}
-
 // 修改 Start 方法以在 Site 级别初始化 mux
 func (s *Site) Start() error {
 	if s.mux == nil {
