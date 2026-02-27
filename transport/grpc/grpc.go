@@ -62,7 +62,10 @@ func (t *Transporter) Stop() {
 	// 关闭所有客户端连接
 	t.connections.Range(func(key, value any) bool {
 		if conn, ok := value.(*grpc.ClientConn); ok {
-			conn.Close()
+			err := conn.Close()
+			if err != nil {
+				lib.Log.Errorf("Failed to close gRPC client connection for target %s: %v", key, err)
+			}
 		}
 		return true
 	})

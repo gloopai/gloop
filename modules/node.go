@@ -1,8 +1,6 @@
 package modules
 
 import (
-	"fmt"
-
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/registry/consul"
 	ggrpc "github.com/gloopai/gloop/transport/grpc"
@@ -62,8 +60,8 @@ func (n *Node) Start() error {
 }
 
 func (n *Node) Close() {
-	n.registry.Close()
 	n.transporter.Stop()
+	n.registry.Close()
 }
 func (n *Node) Destroy() {
 	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
@@ -89,6 +87,5 @@ func (n *Node) ServiceClient(target string) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(consulTarget)
 	return n.transporter.NewClient(consulTarget)
 }
