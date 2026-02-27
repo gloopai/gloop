@@ -43,6 +43,8 @@ func NewContainer() *Container {
 	}
 	lib.Log.SetLogLevel(config.LogLevel)
 	lib.Log.SetDebugEnabled(config.Debug)
+	// Initialize logger with default formatter (includes timestamps)
+	lib.Log.InitLogger(config.LogLevel, nil)
 
 	c := &Container{
 		Config:   config,
