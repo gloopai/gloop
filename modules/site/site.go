@@ -2,7 +2,6 @@ package site
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -52,11 +51,6 @@ func (s *Site) Init() {
 		s.Config.Id = lib.Generate.Guid()
 	}
 
-	// 在 NewSite 函数中设置 StaticFileCacheTTL 的默认值
-	if s.Config.StaticFileCacheTTL == 0 {
-		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
-	}
-
 	s.Auth.SetEnv(s.GetEnv())
 	s.Auth.Init() // 初始化 auth 模块
 
@@ -73,26 +67,6 @@ func (s *Site) Start() error {
 		s.mux = http.NewServeMux()
 	}
 
-	if s.Config.UseEmbed {
-		// 在 Start 方法中增加跨域支持
-		if s.Config.CrossOrigin {
-			s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Access-Control-Allow-Origin", "*")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-				if r.Method == http.MethodOptions {
-					w.WriteHeader(http.StatusOK)
-					return
-				}
-				s.serveStaticFiles(w, r)
-			})
-		} else {
-			s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				s.serveStaticFiles(w, r)
-			})
-		}
-	}
-
 	// 优化 HTTP 服务器配置
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", s.Config.Port),
@@ -102,48 +76,13 @@ func (s *Site) Start() error {
 		MaxHeaderBytes: 1 << 20,          // 限制请求头大小为 1MB
 	}
 
-	if s.Config.UseHTTPS {
-		if s.Config.Cert.CertFile == "" || s.Config.Cert.KeyFile == "" {
-			return fmt.Errorf("必须提供 TLS 证书和密钥以启用 HTTPS (端口: %d)", s.Config.Port)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("HTTP 服务器错误: %v\n", err)
 		}
-
-		cert, err := tls.LoadX509KeyPair(s.Config.Cert.CertFile, s.Config.Cert.KeyFile)
-		if err != nil {
-			return fmt.Errorf("加载 TLS 证书和密钥失败 (证书: %s, 密钥: %s): %v", s.Config.Cert.CertFile, s.Config.Cert.KeyFile, err)
-		}
-
-		server.TLSConfig = &tls.Config{
-			Certificates: []tls.Certificate{cert},
-		}
-
-		go func() {
-			if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
-				fmt.Printf("HTTPS 服务器错误: %v\n", err)
-			}
-		}()
-	} else {
-		go func() {
-			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				fmt.Printf("HTTP 服务器错误: %v\n", err)
-			}
-		}()
-	}
+	}()
 
 	return nil
-}
-
-// 替换 serveStaticFiles 调用为使用 StaticFileHandler
-func (s *Site) serveStaticFiles(w http.ResponseWriter, r *http.Request) {
-	config := StaticFileHandlerConfig{
-		TTL:            s.Config.StaticFileCacheTTL,
-		BaseRoot:       s.Config.BaseRoot,
-		UseEmbed:       s.Config.UseEmbed,
-		EmbedFS:        s.Config.EmbedFiles,
-		ForceIndexHTML: s.Config.ForceIndexHTML,
-	}
-	staticFileHandler := NewStaticFileHandler(config)
-	staticFileHandler.StartCacheCleaner()
-	staticFileHandler.ServeStaticFile(w, r)
 }
 
 // 注册一个普通路由
@@ -295,10 +234,6 @@ func (s *Site) GetBindAddresses() []string {
 	addresses := make([]string, 0)
 
 	protocol := "http"
-	if s.Config.UseHTTPS {
-		protocol = "https"
-	}
-
 	// 构建绑定地址，如果绑定到所有接口（端口前缀为空或 ':'），则返回常见接口
 	address := fmt.Sprintf(":%d", s.Config.Port)
 

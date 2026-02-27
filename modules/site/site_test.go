@@ -12,15 +12,15 @@ func StartTest() {
 	// Example usage
 	config := SiteOptions{
 		Port: 8080,
-		Cert: SiteCert{
-			CertFile: "path/to/cert.pem",
-			KeyFile:  "path/to/key.pem",
-		},
-		UseHTTPS: false,
-		BaseRoot: "static",
-		UseEmbed: true,
-		// EmbedFiles:     manageStatic,
-		ForceIndexHTML: true,
+		// Cert: SiteCert{
+		// 	CertFile: "path/to/cert.pem",
+		// 	KeyFile:  "path/to/key.pem",
+		// },
+		// UseHTTPS: false,
+		// BaseRoot: "static",
+		// UseEmbed: true,
+		// // EmbedFiles:     manageStatic,
+		// ForceIndexHTML: true,
 		// JWTOptions: auth.JWTOptions{
 		// 	SecretKey:     "RxyiJcD8O19/GE9GL/V2sn0b/MOSWTWoygN77e7RNSI=",
 		// 	TokenDuration: 24 * 365, // 365 days
