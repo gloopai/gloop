@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	gorm.io/driver/sqlite v1.5.7
+	github.com/hashicorp/consul/api v1.33.4
 	gorm.io/gorm v1.30.0
 )
 
@@ -16,7 +16,6 @@ require (
 	github.com/go-playground/form v3.1.4+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/hashicorp/consul/api v1.33.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
@@ -30,7 +29,6 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.48.0 // indirect
@@ -39,23 +37,13 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
-require (
-	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ncruces/go-strftime v0.1.9 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/exp v0.0.0-20250808145144-a408d31f581a // indirect
-	modernc.org/libc v1.62.1 // indirect
-	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.9.1 // indirect
-	modernc.org/sqlite v1.37.0
-)
+require golang.org/x/exp v0.0.0-20250808145144-a408d31f581a // indirect
 
 require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/leodido/go-urn v1.4.0 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
 
 require (
