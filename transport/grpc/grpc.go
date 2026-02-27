@@ -52,3 +52,8 @@ func (t *Transport) Stop() {
 	t.server.GracefulStop()
 	lib.Log.Infof("gRPC server is stopped")
 }
+
+// 添加服务
+func (t *Transport) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
+	t.server.RegisterService(desc, provider)
+}

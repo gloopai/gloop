@@ -3,14 +3,17 @@ package modules
 import (
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/registry/consul"
+	ggrpc "github.com/gloopai/gloop/transport/grpc"
+	"google.golang.org/grpc"
 )
 
 // Node 组件
 type Node struct {
 	Base
-	NodeId   string
-	NodeName string
-	Config   *NodeOptions
+	NodeId      string
+	NodeName    string
+	Config      *NodeOptions
+	transporter *ggrpc.Transport
 }
 
 type NodeOptions struct {
@@ -34,17 +37,32 @@ func NewNode(config *NodeOptions) *Node {
 }
 
 func (n *Node) Init() {
+	// 初始化 transporter
+	transporter, err := ggrpc.NewTransport(&ggrpc.Options{
+		Addr: n.Config.Addr,
+	})
+	if err != nil {
+		lib.Log.Fatalf("failed to create gRPC transport: %v", err)
+	}
+	n.transporter = transporter
 
 }
 
 func (n *Node) Start() error {
-	// lib.Log.Infof("Node %s is starting at %s", n.Config.Name, n.Config.Addr)
+	go func() {
+		n.transporter.Start()
+	}()
 	return nil
 }
 
 func (n *Node) Close() {
-	lib.Log.Infof("Node %s is closing", n.Config.Id)
+	n.transporter.Stop()
 }
 func (n *Node) Destroy() {
 	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
+}
+
+// 添加服务
+func (n *Node) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
+	n.transporter.AddServiceProvider(name, desc, provider)
 }
