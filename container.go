@@ -67,6 +67,7 @@ func NewContainer() *Container {
 		c.Site.Start()
 	}
 
+	// 初始化 Node 组件
 	c.Node = modules.NewNode(&config.Node)
 	c.Node.SetEnv(&modules.ComponentEnv{
 		DB:     c.Database,
