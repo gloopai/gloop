@@ -2,7 +2,7 @@ package modules
 
 import (
 	"github.com/gloopai/gloop/lib"
-	"github.com/gloopai/gloop/registry"
+	"github.com/gloopai/gloop/registry/consul"
 )
 
 // Node 组件
@@ -21,7 +21,7 @@ type NodeOptions struct {
 	// 节点grpc 地址，格式为 "ip:port"，如果没设置就随机端口
 	Addr string
 	// 注册中心配置
-	Consul registry.RegistryOptions
+	Consul consul.Options
 }
 
 func NewNode(config *NodeOptions) *Node {

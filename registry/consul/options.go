@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-type ConsulOptions struct {
+type Options struct {
 	// 客户端连接地址
 	// 内建客户端配置，默认为127.0.0.1:8500
 	Addr string
