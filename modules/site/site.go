@@ -24,9 +24,17 @@ type Site struct {
 
 // 初始化日志记录器
 func NewSite(config SiteOptions) *Site {
+	auth := auth.NewAuth(auth.AuthOptions{
+		TelegramBotToken: config.Auth.TelegramBotToken,
+		JWTOptions: auth.JWTOptions{
+			SecretKey:     config.Auth.Jwt.SecretKey,
+			TokenDuration: config.Auth.Jwt.TokenDuration,
+		},
+	})
 	return &Site{
 		Config:          config,
 		RouteCommandMap: NewRouteCommandManager(),
+		Auth:            auth,
 	}
 }
 
@@ -44,13 +52,6 @@ func (s *Site) Init() {
 		s.Config.StaticFileCacheTTL = 10 * time.Minute // 默认值为 10 分钟
 	}
 
-	s.Auth = auth.NewAuth(auth.AuthOptions{
-		TelegramBotToken: s.Config.Auth.TelegramBotToken,
-		JWTOptions: auth.JWTOptions{
-			SecretKey:     s.Config.Auth.Jwt.SecretKey,
-			TokenDuration: s.Config.Auth.Jwt.TokenDuration,
-		},
-	})
 	s.Auth.SetEnv(s.GetEnv())
 	s.Auth.Init() // 初始化 auth 模块
 

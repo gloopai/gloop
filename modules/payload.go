@@ -13,6 +13,8 @@ import (
 type RequestPayload struct {
 	Auth    RequestAuth `json:"auth"`
 	Command string      `json:"command"`
+	// TraceId 用于在请求链路中追踪请求
+	TraceId string      `json:"trace_id"`
 	Data    interface{} `json:"data"`
 }
 type RequestAuth struct {
