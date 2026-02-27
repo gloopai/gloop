@@ -52,7 +52,6 @@ func NewContainer() *Container {
 	// 数据库链接
 	if config.Db.DSN != "" {
 		dbService := modules.NewDb(config.Db)
-		dbService.Init()
 		c.Database = dbService
 	}
 
@@ -63,8 +62,6 @@ func NewContainer() *Container {
 			DB:     c.Database,
 			Events: c.EventBus,
 		})
-		c.Site.Init()
-		c.Site.Start()
 	}
 
 	// 初始化 Node 组件
@@ -73,11 +70,6 @@ func NewContainer() *Container {
 		DB:     c.Database,
 		Events: c.EventBus,
 	})
-	c.Node.Init()
-	if err := c.Node.Start(); err != nil {
-		log.Fatalf("[NewContainer] failed to start node: %v", err)
-	}
-
 	return c
 }
 
@@ -114,6 +106,7 @@ func (c *Container) Add(components ...modules.Component) {
 func (c *Container) Serve() {
 	c.doPrintFrameworkInfo()
 	c.doInitComponents()
+	c.doRegisterComponents()
 	c.doStartComponents()
 
 	signalChan := make(chan os.Signal, 1)
@@ -129,8 +122,23 @@ func (c *Container) Serve() {
 	select {}
 }
 
+// 初始化 container 默认组件
+func (c *Container) initDefaultComponents() {
+	if c.Database != nil {
+		c.Database.Init()
+	}
+	if c.Site != nil {
+		c.Site.Init()
+	}
+
+	if c.Node != nil {
+		c.Node.Init()
+	}
+}
+
 // 初始化所有组件
 func (c *Container) doInitComponents() {
+	c.initDefaultComponents()
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
@@ -147,8 +155,35 @@ func (c *Container) doInitComponents() {
 	lib.Log.Info("🟢 Components INIT Complet!!")
 }
 
+// 注册 grpc 服务
+func (c *Container) doRegisterComponents() {
+	for _, comp := range c.components {
+		defer func() {
+			if r := recover(); r != nil {
+				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
+			}
+		}()
+		comp.Register()
+	}
+	lib.Log.Info("🟢 Components Service REGISTER Complet!!")
+}
+
+// 启动 container 默认组件
+func (c *Container) startDefaultComponents() {
+	if c.Database != nil {
+		c.Database.Start()
+	}
+	if c.Site != nil {
+		c.Site.Start()
+	}
+	if c.Node != nil {
+		c.Node.Start()
+	}
+}
+
 // 启动所有组件
 func (c *Container) doStartComponents() {
+	c.startDefaultComponents()
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
@@ -187,7 +222,6 @@ func (c *Container) doPrintFrameworkInfo() {
 		if c.Node != nil {
 			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.Node.GetServiceListen()))
 			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.Node.GetServiceAddr()))
-			infos = append(infos, fmt.Sprintf("gRPC Port: %d", c.Node.GetServicePort()))
 		}
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))

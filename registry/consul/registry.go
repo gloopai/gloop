@@ -2,6 +2,8 @@ package consul
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 
 	"github.com/gloopai/gloop/lib"
 	"github.com/hashicorp/consul/api"
@@ -29,20 +31,34 @@ func NewRegistry(ops *Options) (*Registry, error) {
 }
 
 // 注册服务
-func (r *Registry) Register(serviceID, serviceName, serviceAddr string, servicePort int) error {
+func (r *Registry) Register(serviceID, serviceName string, serviceAddr string) error {
 	r.serviceId = serviceID
 	r.serviceName = serviceName
+	addr := ""
+	port := 0
+	host, portStr, err := net.SplitHostPort(serviceAddr)
+	if err == nil {
+		addr = host
+		if p, err2 := strconv.Atoi(portStr); err2 == nil {
+			port = p
+		}
+	} else {
+		// fallback: keep whole string as address
+		addr = serviceAddr
+	}
+
 	registration := &api.AgentServiceRegistration{
 		ID:      r.serviceId,
 		Name:    r.serviceName,
-		Port:    servicePort,
-		Address: serviceAddr,
+		Address: addr,
+		Port:    port,
 		Check: &api.AgentServiceCheck{
 			GRPC:     fmt.Sprintf("%s", serviceAddr),
 			Interval: "10s",
 			Timeout:  "5s",
 		},
 	}
+
 	return r.client.Agent().ServiceRegister(registration)
 }
 
