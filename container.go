@@ -133,7 +133,7 @@ func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Recovered from panic in component %s: %v", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
 			}
 		}()
 		comp.SetEnv(&modules.ComponentEnv{
@@ -157,7 +157,7 @@ func (c *Container) doStartComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Recovered from panic in component %s: %v", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
 			}
 		}()
 		go comp.Start()
@@ -169,6 +169,11 @@ func (c *Container) doDestroyComponents() {
 	c.destroy()
 
 	for _, comp := range c.components {
+		defer func() {
+			if r := recover(); r != nil {
+				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
+			}
+		}()
 		comp.Destroy()
 	}
 	lib.Log.Info("Container stopped")
