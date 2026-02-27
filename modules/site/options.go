@@ -5,11 +5,6 @@ import (
 	"github.com/gloopai/gloop/modules/auth"
 )
 
-type SiteCert struct {
-	CertFile string `json:"CertFile"` // 证书内容
-	KeyFile  string `json:"KeyFile"`  // 密钥内容
-}
-
 type SiteAuthOption struct {
 	TelegramBotToken string          `json:"telegram_bot_token"` // Telegram Bot Token
 	Jwt              auth.JWTOptions `json:"jwt"`                // JWT

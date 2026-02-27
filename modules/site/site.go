@@ -22,10 +22,6 @@ type Site struct {
 	Auth            *auth.Auth
 }
 
-type ctxKey string
-
-const traceContextKey ctxKey = "trace_id"
-
 // 初始化日志记录器
 func NewSite(config SiteOptions) *Site {
 	auth := auth.NewAuth(auth.AuthOptions{
@@ -127,11 +123,8 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	// 解析 JSON 请求体
 	var payload modules.RequestPayload
-	traceID, _ := r.Context().Value(traceContextKey).(string)
-	if traceID == "" {
-		traceID = lib.Generate.Guid()
-		r = r.WithContext(context.WithValue(r.Context(), traceContextKey, traceID))
-	}
+	traceID := lib.Generate.Guid()
+	r = r.WithContext(context.WithValue(r.Context(), modules.TraceIDContextKey, traceID))
 	payload.TraceId = traceID
 	w.Header().Set("X-Trace-Id", traceID)
 

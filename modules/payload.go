@@ -10,6 +10,12 @@ import (
 	"github.com/gloopai/gloop/lib"
 )
 
+// ContextKey 用于在 context 中传递键，使用独立类型避免与其它包冲突
+type ContextKey string
+
+// TraceIDContextKey 在 context 中存放 trace id 的 key，跨包可用
+var TraceIDContextKey ContextKey = "trace_id"
+
 type RequestPayload struct {
 	TraceId string      `json:"trace_id"`
 	Auth    RequestAuth `json:"auth"`

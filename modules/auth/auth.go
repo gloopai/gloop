@@ -103,7 +103,6 @@ func (a *Auth) Login(ctx context.Context, req *modules.RequestPayload) modules.R
 
 // 通过 Telegram 登录
 func (a *Auth) LoginByTelegram(ctx context.Context, req *modules.RequestPayload) modules.ResponsePayload {
-	fmt.Println(ctx.Value("trace_id"))
 	type queryObject struct {
 		InitData string `json:"init_data"`
 	}
