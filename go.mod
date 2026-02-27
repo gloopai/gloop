@@ -13,6 +13,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
+	github.com/go-playground/form v3.1.4+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/hashicorp/consul/api v1.33.4 // indirect
@@ -26,10 +27,12 @@ require (
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
@@ -64,6 +67,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/json-iterator/go v1.1.12
+	github.com/mbobakov/grpc-consul-resolver v1.5.3
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	golang.org/x/sync v0.19.0

@@ -88,5 +88,9 @@ func (n *Node) GetServicePort() int {
 
 // 获取grpc客户端连接
 func (n *Node) ServiceClient(target string) (*grpc.ClientConn, error) {
-	return n.transporter.NewClient(target)
+	consulTarget, err := n.registry.GetServiceTarget(target)
+	if err != nil {
+		return nil, err
+	}
+	return n.transporter.NewClient(consulTarget)
 }

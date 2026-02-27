@@ -8,6 +8,7 @@ import (
 )
 
 type Registry struct {
+	config      *Options
 	serviceId   string
 	serviceName string
 	client      *api.Client
@@ -19,6 +20,7 @@ func NewRegistry(ops *Options) *Registry {
 	client, _ := api.NewClient(config)
 
 	return &Registry{
+		config: ops,
 		client: client,
 	}
 }
@@ -44,4 +46,10 @@ func (r *Registry) Register(serviceID, serviceName, serviceAddr string, serviceP
 // 注消服务
 func (r *Registry) Close() {
 	r.client.Agent().ServiceDeregister(r.serviceId)
+}
+
+// 获取服务链接
+func (r *Registry) GetServiceTarget(serviceName string) (string, error) {
+	target := fmt.Sprintf("consul://%s/%s?wait=14s", r.config.Addr, serviceName)
+	return target, nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/gloopai/gloop/lib"
 	gnet "github.com/gloopai/gloop/lib/net"
+	_ "github.com/mbobakov/grpc-consul-resolver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
@@ -61,6 +62,13 @@ func (t *Transporter) Start() error {
 // 关闭 grpc 服务
 func (t *Transporter) Stop() {
 	t.server.GracefulStop()
+	// 关闭所有客户端连接
+	t.connections.Range(func(key, value any) bool {
+		if conn, ok := value.(*grpc.ClientConn); ok {
+			conn.Close()
+		}
+		return true
+	})
 	lib.Log.Infof("gRPC server is stopped")
 }
 
@@ -76,6 +84,7 @@ func (t *Transporter) NewClient(target string) (*grpc.ClientConn, error) {
 	}
 	c, err, _ := t.sfg.Do(target, func() (any, error) {
 		cc, err := grpc.NewClient(target,
+			grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
