@@ -66,3 +66,8 @@ func (n *Node) Destroy() {
 func (n *Node) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
 	n.transporter.AddServiceProvider(name, desc, provider)
 }
+
+// 获取grpc客户端连接
+func (n *Node) ServiceClient(target string) (*grpc.ClientConn, error) {
+	return n.transporter.NewClient(target)
+}

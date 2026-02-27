@@ -17,7 +17,6 @@ type Transporter struct {
 	listenAddr  string
 	exposeAddr  string
 	server      *grpc.Server
-	once        sync.Once
 	sfg         singleflight.Group
 	connections sync.Map
 }
