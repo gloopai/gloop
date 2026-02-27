@@ -36,10 +36,6 @@ func (a *Auth) Init() {
 
 }
 
-func (a *Auth) Start() error {
-	return nil
-}
-
 /* 获取用户表名 */
 func (a *Auth) TableName() string {
 	return new(User).TableName()

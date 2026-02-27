@@ -44,7 +44,12 @@ func (l *log) InitLogger(level LogLevel, format LogFormatter) {
 		l.logger.SetLevel(logrus.Level(level))
 
 		if format == nil {
-			format = &logrus.TextFormatter{}
+			// Default to a colored text formatter with full timestamps
+			format = &logrus.TextFormatter{
+				ForceColors:     true,
+				FullTimestamp:   true,
+				TimestampFormat: "2006-01-02 15:04:05",
+			}
 		}
 		l.logger.SetFormatter(logrus.Formatter(format))
 	})
