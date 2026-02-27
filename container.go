@@ -154,7 +154,7 @@ func (c *Container) doInitComponents() {
 		})
 		comp.Init()
 	}
-	lib.Log.Info("🟢 Components INIT Complet!!")
+	lib.Log.Info("🟢 Components INIT Complete!!")
 }
 
 // 注册 grpc 服务
@@ -167,7 +167,7 @@ func (c *Container) doRegisterComponents() {
 		}()
 		comp.Register()
 	}
-	lib.Log.Info("🟢 Components Service REGISTER Complet!!")
+	lib.Log.Info("🟢 Components Service REGISTER Complete!!")
 }
 
 // 启动 container 默认组件
@@ -195,7 +195,7 @@ func (c *Container) doStartComponents() {
 		comp.Start()
 	}
 
-	lib.Log.Info("🟢 Components START Complet!!")
+	lib.Log.Info("🟢 Components START Complete!!")
 }
 
 // 销毁所有组件
@@ -210,7 +210,7 @@ func (c *Container) doDestroyComponents() {
 		}()
 		comp.Destroy()
 	}
-	lib.Log.Info("Container stopped")
+	lib.Log.Info("🟢 Components DESTROY Complete!!")
 }
 
 // 打印框架信息
