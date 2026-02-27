@@ -27,24 +27,6 @@ type ctxKey string
 
 const traceContextKey ctxKey = "trace_id"
 
-// ensureTraceID 确保请求具有 trace id：优先使用 `X-Trace-Id` 请求头，其次使用上下文中已有的值，若都没有则生成新的。
-// 会把 trace id 写回响应头并将其放入请求上下文中。
-func (s *Site) ensureTraceID(w http.ResponseWriter, r *http.Request) *http.Request {
-	// 已存在于上下文则直接返回
-	if v, ok := r.Context().Value(traceContextKey).(string); ok && v != "" {
-		w.Header().Set("X-Trace-Id", v)
-		return r
-	}
-
-	// 优先使用请求头
-	traceID := r.Header.Get("X-Trace-Id")
-	if traceID == "" {
-		traceID = lib.Generate.Guid()
-	}
-	w.Header().Set("X-Trace-Id", traceID)
-	return r.WithContext(context.WithValue(r.Context(), traceContextKey, traceID))
-}
-
 // 初始化日志记录器
 func NewSite(config SiteOptions) *Site {
 	auth := auth.NewAuth(auth.AuthOptions{
@@ -195,7 +177,6 @@ func (s *Site) AddPayloadRoute(pattern string) {
 	}
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		r = s.ensureTraceID(w, r)
 		s.handlePayloadRequest(w, r, pattern, nil)
 	})
 }
@@ -207,9 +188,18 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	// 解析 JSON 请求体
 	var payload modules.RequestPayload
+	traceID, _ := r.Context().Value(traceContextKey).(string)
+	if traceID == "" {
+		traceID = lib.Generate.Guid()
+		r = r.WithContext(context.WithValue(r.Context(), traceContextKey, traceID))
+	}
+	payload.TraceId = traceID
+	w.Header().Set("X-Trace-Id", traceID)
+
 	// 处理预检请求
 	if r.Method != http.MethodPost {
 		modules.WriteJSONResponse(w, modules.ResponsePayload{
+			TraceId: traceID,
 			Code:    http.StatusMethodNotAllowed,
 			Message: "Method not allowed",
 		})
@@ -218,26 +208,12 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 
 	if err := modules.ParseJSONRequest(r, &payload); err != nil {
 		modules.WriteJSONResponse(w, modules.ResponsePayload{
+			TraceId: traceID,
 			Code:    http.StatusBadRequest,
 			Message: "Invalid JSON payload",
 		})
 		return
 	}
-
-	// 确保 payload 中包含 trace id：先从上下文取，再从 header，再从请求体，最后生成
-	traceID, _ := r.Context().Value(traceContextKey).(string)
-	if traceID == "" {
-		traceID = r.Header.Get("X-Trace-Id")
-	}
-	if traceID == "" {
-		traceID = payload.TraceId
-	}
-	if traceID == "" {
-		traceID = lib.Generate.Guid()
-		r = r.WithContext(context.WithValue(r.Context(), traceContextKey, traceID))
-	}
-	payload.TraceId = traceID
-	w.Header().Set("X-Trace-Id", traceID)
 
 	if auth != nil {
 		payload.Auth = *auth
@@ -247,12 +223,14 @@ func (s *Site) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 	key := fmt.Sprintf("%s:%s", pattern, payload.Command)
 	if handler, ok := s.RouteCommandMap.Load(key); ok {
 		response := handler(r.Context(), &payload)
+		response.TraceId = traceID
 		modules.WriteJSONResponse(w, response)
 		return
 	}
 
 	modules.WriteJSONResponse(w, modules.ResponsePayload{
 		Code:    http.StatusNotFound,
+		TraceId: traceID,
 		Message: "Command not found",
 	})
 }
@@ -269,7 +247,6 @@ func (s *Site) AddTokenPayloadRoute(pattern string) {
 	}
 
 	s.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		r = s.ensureTraceID(w, r)
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
