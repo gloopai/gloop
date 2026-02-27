@@ -7,30 +7,40 @@ import (
 )
 
 type Registry struct {
+	serviceId   string
+	serviceName string
+	client      *api.Client
 }
 
 func NewRegistry(ops *Options) *Registry {
-	port := 50051
-	serviceName := "hello-service"
-	instanceID := "hello-service-1"
-
-	// 1. 注册到 Consul
 	config := api.DefaultConfig()
 	config.Address = "127.0.0.1:8500"
 	client, _ := api.NewClient(config)
 
+	return &Registry{
+		client: client,
+	}
+}
+
+// 注册服务
+func (r *Registry) Register(serviceID, serviceName, serviceAddr string, servicePort int) error {
+	r.serviceId = serviceID
+	r.serviceName = serviceName
 	registration := &api.AgentServiceRegistration{
-		ID:      instanceID,
-		Name:    serviceName,
-		Port:    port,
-		Address: "127.0.0.1",
+		ID:      r.serviceId,
+		Name:    r.serviceName,
+		Port:    servicePort,
+		Address: serviceAddr,
 		Check: &api.AgentServiceCheck{
-			// Consul 官方支持 gRPC 健康检查
-			GRPC:     fmt.Sprintf("127.0.0.1:%d", port),
+			GRPC:     fmt.Sprintf("%s", serviceAddr),
 			Interval: "10s",
 			Timeout:  "5s",
 		},
 	}
-	client.Agent().ServiceRegister(registration)
-	return &Registry{}
+	return r.client.Agent().ServiceRegister(registration)
+}
+
+// 注消服务
+func (r *Registry) Close() {
+	r.client.Agent().ServiceDeregister(r.serviceId)
 }

@@ -11,6 +11,8 @@ import (
 	gnet "github.com/gloopai/gloop/lib/net"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 type Transporter struct {
@@ -32,6 +34,7 @@ func NewTransporter(opts *Options) (*Transporter, error) {
 	s := grpc.NewServer(
 	// grpc.UnaryInterceptor(grpcserverlib.NewRateLimiter(1).UnaryInterceptor),
 	)
+	healthpb.RegisterHealthServer(s, health.NewServer())
 	return &Transporter{
 		ListenAddr: listenAddr,
 		ExposeAddr: exposeAddr,

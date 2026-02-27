@@ -14,6 +14,7 @@ type Node struct {
 	NodeName    string
 	Config      *NodeOptions
 	transporter *ggrpc.Transporter
+	registry    *consul.Registry
 }
 
 type NodeOptions struct {
@@ -47,19 +48,19 @@ func (n *Node) Init() {
 	n.transporter = transporter
 
 	// 初始化注册中心
-	consul.NewRegistry(&n.Config.Consul)
-	// registry.Register(n.NodeId, n.NodeName, n.transporter.ExposeAddr)
-
+	n.registry = consul.NewRegistry(&n.Config.Consul)
 }
 
 func (n *Node) Start() error {
 	go func() {
 		n.transporter.Start()
 	}()
+	n.registry.Register(n.NodeId, n.NodeName, n.transporter.ExposeAddr, n.transporter.ExposePort)
 	return nil
 }
 
 func (n *Node) Close() {
+	n.registry.Close()
 	n.transporter.Stop()
 }
 func (n *Node) Destroy() {

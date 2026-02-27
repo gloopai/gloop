@@ -131,6 +131,11 @@ func (c *Container) Serve() {
 // 初始化所有组件
 func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic in component %s: %v", comp.Name(), r)
+			}
+		}()
 		comp.SetEnv(&modules.ComponentEnv{
 			Node:   c.Node,
 			DB:     c.Database,
@@ -150,6 +155,11 @@ func (c *Container) doRegComponentsService() {
 // 启动所有组件
 func (c *Container) doStartComponents() {
 	for _, comp := range c.components {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic in component %s: %v", comp.Name(), r)
+			}
+		}()
 		go comp.Start()
 	}
 }
