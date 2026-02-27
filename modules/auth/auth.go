@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gloopai/gloop/lib"
@@ -47,7 +48,7 @@ func (a *Auth) Authorization() string {
 }
 
 /* 用户注册 */
-func (a *Auth) Register(req *modules.RequestPayload) modules.ResponsePayload {
+func (a *Auth) Register(ctx context.Context, req *modules.RequestPayload) modules.ResponsePayload {
 	type queryObj struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -67,7 +68,7 @@ func (a *Auth) Register(req *modules.RequestPayload) modules.ResponsePayload {
 }
 
 /* 用户登录 */
-func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
+func (a *Auth) Login(ctx context.Context, req *modules.RequestPayload) modules.ResponsePayload {
 	type queryObject struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -101,7 +102,7 @@ func (a *Auth) Login(req *modules.RequestPayload) modules.ResponsePayload {
 }
 
 // 通过 Telegram 登录
-func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayload {
+func (a *Auth) LoginByTelegram(ctx context.Context, req *modules.RequestPayload) modules.ResponsePayload {
 	type queryObject struct {
 		InitData string `json:"init_data"`
 	}
@@ -126,7 +127,7 @@ func (a *Auth) LoginByTelegram(req *modules.RequestPayload) modules.ResponsePayl
 }
 
 /* 获取用户信息 */
-func (a *Auth) ParseToken(req *modules.RequestPayload) modules.ResponsePayload {
+func (a *Auth) ParseToken(ctx context.Context, req *modules.RequestPayload) modules.ResponsePayload {
 	type queryObject struct {
 		Token string `json:"token"`
 	}
