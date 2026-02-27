@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 
+	"github.com/gloopai/gloop/lib"
 	"github.com/hashicorp/consul/api"
 )
 
@@ -14,7 +15,7 @@ type Registry struct {
 
 func NewRegistry(ops *Options) *Registry {
 	config := api.DefaultConfig()
-	config.Address = "127.0.0.1:8500"
+	config.Address = lib.Conf.GetString(ops.Addr, "127.0.0.1:8500")
 	client, _ := api.NewClient(config)
 
 	return &Registry{
