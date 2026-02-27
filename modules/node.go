@@ -68,8 +68,8 @@ func (n *Node) Destroy() {
 }
 
 // 添加grpc服务
-func (n *Node) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
-	n.transporter.AddServiceProvider(name, desc, provider)
+func (n *Node) AddServiceProvider(desc *grpc.ServiceDesc, provider any) {
+	n.transporter.AddServiceProvider(desc, provider)
 }
 
 func (n *Node) GetServiceListen() string {
@@ -82,8 +82,8 @@ func (n *Node) GetServiceAddr() string {
 }
 
 // 获取grpc客户端连接
-func (n *Node) ServiceClient(target string) (*grpc.ClientConn, error) {
-	consulTarget, err := n.registry.GetServiceTarget(target)
+func (n *Node) ServiceClient() (*grpc.ClientConn, error) {
+	consulTarget, err := n.registry.GetServiceTarget(n.NodeName)
 	if err != nil {
 		return nil, err
 	}

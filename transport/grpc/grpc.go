@@ -81,7 +81,7 @@ func (t *Transporter) GetExposeAddr() string {
 }
 
 // 添加服务
-func (t *Transporter) AddServiceProvider(name string, desc *grpc.ServiceDesc, provider any) {
+func (t *Transporter) AddServiceProvider(desc *grpc.ServiceDesc, provider any) {
 	t.server.RegisterService(desc, provider)
 }
 
