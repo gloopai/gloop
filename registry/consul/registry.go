@@ -2,8 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"net"
-	"strconv"
 
 	"github.com/gloopai/gloop/lib"
 	"github.com/hashicorp/consul/api"
@@ -40,7 +38,7 @@ func (r *Registry) Register(serviceID, serviceName, serviceAddr string, serviceP
 		Port:    servicePort,
 		Address: serviceAddr,
 		Check: &api.AgentServiceCheck{
-			GRPC:     net.JoinHostPort(serviceAddr, strconv.Itoa(servicePort)),
+			GRPC:     fmt.Sprintf("%s", serviceAddr),
 			Interval: "10s",
 			Timeout:  "5s",
 		},
