@@ -85,7 +85,7 @@ func loadOptions() (*ContainerConfig, error) {
 	return options, nil
 }
 
-func (c *Container) destroy() {
+func (c *Container) destroyDefaultComponents() {
 	if c.Site != nil {
 		c.Site.Close()
 		c.Site.Destroy()
@@ -200,7 +200,7 @@ func (c *Container) doStartComponents() {
 
 // 销毁所有组件
 func (c *Container) doDestroyComponents() {
-	c.destroy()
+	c.destroyDefaultComponents()
 
 	for _, comp := range c.components {
 		defer func() {
