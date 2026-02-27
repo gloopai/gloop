@@ -58,7 +58,7 @@ func (v *verification) Validator(o interface{}) error {
 				if err != nil {
 					msg := field.Tag.Get("validate_msg")
 					if msg != "" {
-						return fmt.Errorf(msg)
+						return fmt.Errorf("%s", msg)
 					} else {
 						return fmt.Errorf("参数校验:%s 规则:%s", fieldName, vrule)
 					}
