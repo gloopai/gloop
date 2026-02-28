@@ -52,18 +52,6 @@ func (d *DbService) Init() {
 	// fmt.Println("MySQL database initialized successfully")
 }
 
-/*  */
-func (d *DbService) Close() {}
-
-func (d *DbService) printInfo() {
-	infos := make([]string, 0, 2)
-	infos = append(infos, fmt.Sprintf("ID: %s", d.Id))
-	infos = append(infos, fmt.Sprintf("name: %s", d.Name()))
-	infos = append(infos, fmt.Sprintf("DSN: %s", d.DSN))
-	infos = append(infos, "driver: MYSQL")
-	// modules.PrintBoxInfo(d.Name(), infos...)
-}
-
 // 提供一个方法来获取数据库连接
 func (d *DbService) GetConnection() *gorm.DB {
 	return d.Conn
