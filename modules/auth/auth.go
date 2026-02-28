@@ -23,11 +23,6 @@ func (a *Auth) Name() string {
 	return "auth"
 }
 func (a *Auth) Init() {
-	err := EnsureAuthTableExists(a.Env.Mysql.Conn)
-	if err != nil {
-		lib.Log.Error("Failed to ensure auth table exists:", err)
-		return
-	}
 
 	if a.Config.JWTOptions.Authorization == "" {
 		a.Config.JWTOptions.Authorization = "Authorization"
@@ -35,6 +30,14 @@ func (a *Auth) Init() {
 
 	a.JWTManager = NewJWTManager(a.Config.JWTOptions)
 
+}
+
+func (a *Auth) Start() error {
+	err := EnsureAuthTableExists(a.Env.Mysql.Conn)
+	if err != nil {
+		lib.Log.Error("Failed to ensure auth table exists:", err)
+	}
+	return nil
 }
 
 /* 获取用户表名 */

@@ -28,11 +28,10 @@ func NewMysqlClient(opt MysqlClientOptions) *MysqlClient {
 func (d *MysqlClient) Name() string {
 	return "mysql"
 }
-
-// 修改 Init 方法以保存数据库连接，并提供一个方法获取连接
 func (d *MysqlClient) Init() {
-	// d.printInfo()
+}
 
+func (d *MysqlClient) Start() error {
 	// 设置 gorm 的日志级别
 	gormConfig := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn),
@@ -43,15 +42,11 @@ func (d *MysqlClient) Init() {
 	if err != nil {
 		fmt.Printf("failed to open database: %v\n", err)
 		d.Conn = nil
-		return
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	// 将数据库连接保存到结构体中
 	d.Conn = db
-	// fmt.Println("MySQL database initialized successfully")
-}
-
-func (d *MysqlClient) Start() error {
 	return nil
 }
 
