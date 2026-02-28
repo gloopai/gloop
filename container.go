@@ -10,6 +10,7 @@ import (
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/modules/pkg"
 	"github.com/gloopai/gloop/modules/site"
 )
 
@@ -27,8 +28,8 @@ type Container struct {
 type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
-	Mysql    modules.MysqlClientOptions
-	Redis    modules.RdbOptions
+	Mysql    pkg.MysqlClientOptions
+	Redis    pkg.RedisClientOptions
 	Site     site.SiteOptions
 	Node     modules.NodeOptions
 }
@@ -53,13 +54,13 @@ func NewContainer() *Container {
 
 	// 数据库链接
 	if config.Mysql.DSN != "" {
-		dbService := modules.NewMysqlClient(config.Mysql)
+		dbService := pkg.NewMysqlClient(config.Mysql)
 		c.env.Mysql = dbService
 	}
 
 	// 初始化 Redis 组件
 	if config.Redis.Addr != "" {
-		rdb := modules.NewRdb(&config.Redis)
+		rdb := pkg.NewRedisClient(&config.Redis)
 		c.env.Rdb = rdb
 	}
 

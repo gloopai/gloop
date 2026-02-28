@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	"github.com/gloopai/gloop/events"
+	"github.com/gloopai/gloop/modules/pkg"
 )
 
 type ComponentEnv struct {
 	Node   *Node
-	Mysql  *MysqlClient
-	Rdb    *Rdb
+	Mysql  *pkg.MysqlClient
+	Rdb    *pkg.RedisClient
 	Events *events.EventBus
 }
 
@@ -22,7 +23,7 @@ func (e *ComponentEnv) GetNode() (*Node, error) {
 }
 
 // GetMysql 获取 MysqlClient 组件实例
-func (e *ComponentEnv) GetMysql() (*MysqlClient, error) {
+func (e *ComponentEnv) GetMysql() (*pkg.MysqlClient, error) {
 	if e.Mysql == nil {
 		return nil, fmt.Errorf("database is not initialized")
 	}
@@ -30,7 +31,7 @@ func (e *ComponentEnv) GetMysql() (*MysqlClient, error) {
 }
 
 // GetRdb 获取 Rdb 组件实例
-func (e *ComponentEnv) GetRdb() (*Rdb, error) {
+func (e *ComponentEnv) GetRdb() (*pkg.RedisClient, error) {
 	if e.Rdb == nil {
 		return nil, fmt.Errorf("redis is not initialized")
 	}

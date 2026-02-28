@@ -1,4 +1,4 @@
-package modules
+package pkg
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ type MysqlClientOptions struct {
 }
 
 type MysqlClient struct {
-	Base
 	Id   string // 数据库 ID
 	DSN  string // 数据库连接字符串
 	Conn *gorm.DB
@@ -50,6 +49,20 @@ func (d *MysqlClient) Init() {
 	// 将数据库连接保存到结构体中
 	d.Conn = db
 	// fmt.Println("MySQL database initialized successfully")
+}
+
+func (d *MysqlClient) Start() error {
+	return nil
+}
+
+func (d *MysqlClient) Close() {}
+
+func (d *MysqlClient) Destroy() {}
+
+func (d *MysqlClient) SetEnv(env *interface{}) {}
+
+func (d *MysqlClient) GetEnv() *interface{} {
+	return nil
 }
 
 // 提供一个方法来获取数据库连接

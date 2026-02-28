@@ -1,4 +1,4 @@
-package modules
+package pkg
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	gredis "github.com/redis/go-redis/v9"
 )
 
-type RdbOptions struct {
+type RedisClientOptions struct {
 	Addr        string // 服务器 0.0.0.0:6379
 	Password    string // 密码
 	Db          int    // 数据库 数字 默认 0
@@ -19,20 +19,19 @@ type RdbOptions struct {
 	IdleTimeout int    // 连接关闭时间 more300
 }
 
-type Rdb struct {
-	Base
-	Config      *RdbOptions
+type RedisClient struct {
+	Config      *RedisClientOptions
 	redisClient *gredis.Client
 	poolMu      sync.Mutex
 }
 
-func NewRdb(opts *RdbOptions) *Rdb {
-	return &Rdb{
+func NewRedisClient(opts *RedisClientOptions) *RedisClient {
+	return &RedisClient{
 		Config: opts,
 	}
 }
 
-func (r *Rdb) createRedisConnect() {
+func (r *RedisClient) createRedisConnect() {
 	// 防止并发初始化
 	r.poolMu.Lock()
 	if r.redisClient != nil {
@@ -62,15 +61,15 @@ func (r *Rdb) createRedisConnect() {
 	r.redisClient = gredis.NewClient(opts)
 }
 
-func (r *Rdb) Name() string {
+func (r *RedisClient) Name() string {
 	return "rdb"
 }
 
-func (r *Rdb) Init() {
+func (r *RedisClient) Init() {
 	// r.printInfo()
 }
 
-func (r *Rdb) Start() error {
+func (r *RedisClient) Start() error {
 	if r.Config == nil {
 		return fmt.Errorf("rdb config is nil")
 	}
@@ -87,13 +86,21 @@ func (r *Rdb) Start() error {
 	return nil
 }
 
-func (r *Rdb) Close() {
+func (r *RedisClient) Close() {
 	if r.redisClient != nil {
 		_ = r.redisClient.Close()
 		r.redisClient = nil
 	}
 }
 
-func (r *Rdb) GetConn() *gredis.Client {
+func (r *RedisClient) Destroy() {}
+
+func (r *RedisClient) SetEnv(env *interface{}) {}
+
+func (r *RedisClient) GetEnv() *interface{} {
+	return nil
+}
+
+func (r *RedisClient) GetConn() *gredis.Client {
 	return r.redisClient
 }
