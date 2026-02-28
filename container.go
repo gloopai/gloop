@@ -252,6 +252,10 @@ func (c *Container) doPrintFrameworkInfo() {
 	if c.Database != nil {
 		infos = append(infos, fmt.Sprintf("Database: %s", "mysql"))
 	}
+	if c.Rdb != nil {
+		infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Redis.Addr))
+	}
+
 	if c.Config.Site.Port != 0 {
 		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
 	}
