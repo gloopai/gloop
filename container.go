@@ -195,7 +195,9 @@ func (c *Container) doStartComponents() {
 				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
 			}
 		}()
-		comp.Start()
+		if err := comp.Start(); err != nil {
+			lib.Log.Errorf("Failed to start component %s: %v", comp.Name(), err)
+		}
 	}
 
 	lib.Log.Info("🟢 Components START Complete!!")

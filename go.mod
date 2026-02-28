@@ -37,7 +37,12 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
-require golang.org/x/exp v0.0.0-20250808145144-a408d31f581a // indirect
+require (
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	go.uber.org/atomic v1.11.0 // indirect
+	golang.org/x/exp v0.0.0-20250808145144-a408d31f581a // indirect
+)
 
 require (
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -58,6 +63,7 @@ require (
 	github.com/mbobakov/grpc-consul-resolver v1.5.3
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/redis/go-redis/v9 v9.18.0
 	golang.org/x/sync v0.19.0
 	google.golang.org/grpc v1.79.1
 	gorm.io/driver/mysql v1.6.0
