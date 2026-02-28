@@ -22,6 +22,7 @@ type Container struct {
 	components []modules.Component
 	Node       *modules.Node
 	Database   *modules.DbService
+	Rdb        *modules.Rdb
 	EventBus   *events.EventBus
 	Site       *site.Site
 }
@@ -30,9 +31,9 @@ type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
 	Db       modules.DbOptions
+	Redis    modules.RdbOptions
 	Site     site.SiteOptions
-	// Registry consul.ConsulOptions
-	Node modules.NodeOptions
+	Node     modules.NodeOptions
 }
 
 // NewContainer 创建一个容器
@@ -57,11 +58,18 @@ func NewContainer() *Container {
 		c.Database = dbService
 	}
 
+	// 初始化 Redis 组件
+	if config.Redis.Addr != "" {
+		rdb := modules.NewRdb(&config.Redis)
+		c.Rdb = rdb
+	}
+
 	// 初始化 Site 组件
 	if config.Site.Port != 0 {
 		c.Site = site.NewSite(config.Site)
 		c.Site.SetEnv(&modules.ComponentEnv{
 			DB:     c.Database,
+			Rdb:    c.Rdb,
 			Events: c.EventBus,
 		})
 	}
@@ -70,6 +78,7 @@ func NewContainer() *Container {
 	c.Node = modules.NewNode(&config.Node)
 	c.Node.SetEnv(&modules.ComponentEnv{
 		DB:     c.Database,
+		Rdb:    c.Rdb,
 		Events: c.EventBus,
 	})
 	return c
@@ -83,20 +92,6 @@ func loadOptions() (*ContainerConfig, error) {
 	}
 
 	return options, nil
-}
-
-func (c *Container) destroyDefaultComponents() {
-	if c.Site != nil {
-		c.Site.Close()
-		c.Site.Destroy()
-	}
-	if c.Database != nil {
-		c.Database.Close()
-	}
-	if c.Node != nil {
-		c.Node.Close()
-		c.Node.Destroy()
-	}
 }
 
 // Add 添加组件
@@ -129,6 +124,9 @@ func (c *Container) initDefaultComponents() {
 	if c.Database != nil {
 		c.Database.Init()
 	}
+	if c.Rdb != nil {
+		c.Rdb.Init()
+	}
 	if c.Site != nil {
 		c.Site.Init()
 	}
@@ -150,6 +148,7 @@ func (c *Container) doInitComponents() {
 		comp.SetEnv(&modules.ComponentEnv{
 			Node:   c.Node,
 			DB:     c.Database,
+			Rdb:    c.Rdb,
 			Events: c.EventBus,
 		})
 		comp.Init()
@@ -175,6 +174,10 @@ func (c *Container) startDefaultComponents() {
 	if c.Database != nil {
 		c.Database.Start()
 	}
+	if c.Rdb != nil {
+		c.Rdb.Start()
+	}
+
 	if c.Site != nil {
 		c.Site.Start()
 	}
@@ -196,6 +199,24 @@ func (c *Container) doStartComponents() {
 	}
 
 	lib.Log.Info("🟢 Components START Complete!!")
+}
+
+// 销毁 container 默认组件
+func (c *Container) destroyDefaultComponents() {
+	if c.Site != nil {
+		c.Site.Close()
+		c.Site.Destroy()
+	}
+	if c.Database != nil {
+		c.Database.Close()
+	}
+	if c.Rdb != nil {
+		c.Rdb.Close()
+	}
+	if c.Node != nil {
+		c.Node.Close()
+		c.Node.Destroy()
+	}
 }
 
 // 销毁所有组件
