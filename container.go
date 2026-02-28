@@ -50,26 +50,11 @@ func NewContainer() *Container {
 			Events: events.NewEventBus(),
 		},
 	}
-
-	// 数据库链接
-	if config.Mysql.DSN != "" {
-		dbService := pkg.NewMysqlClient(config.Mysql)
-		c.env.Mysql = dbService
-	}
-
-	// 初始化 Redis 组件
-	if config.Redis.Addr != "" {
-		rdb := pkg.NewRedisClient(&config.Redis)
-		c.env.Rdb = rdb
-	}
-
 	// 初始化 Node 组件
 	c.env.Node = modules.NewNode(&config.Node)
 
 	c.env = &modules.ComponentEnv{
 		Node:   c.env.Node,
-		Mysql:  c.env.Mysql,
-		Rdb:    c.env.Rdb,
 		Events: c.env.Events,
 	}
 	c.env.Node.SetEnv(c.env)
@@ -120,18 +105,12 @@ func (c *Container) Serve() {
 
 // 初始化 container 默认组件
 func (c *Container) initDefaultComponents() {
-	if c.env.Mysql != nil {
-		c.env.Mysql.Init()
-	}
-	if c.env.Rdb != nil {
-		c.env.Rdb.Init()
-	}
-	if c.Site != nil {
-		c.Site.Init()
-	}
-
 	if c.env.Node != nil {
 		c.env.Node.Init()
+	}
+
+	if c.Site != nil {
+		c.Site.Init()
 	}
 }
 
@@ -165,18 +144,11 @@ func (c *Container) doRegisterComponents() {
 
 // 启动 container 默认组件
 func (c *Container) startDefaultComponents() {
-	if c.env.Mysql != nil {
-		c.env.Mysql.Start()
-	}
-	if c.env.Rdb != nil {
-		c.env.Rdb.Start()
-	}
-
-	if c.Site != nil {
-		c.Site.Start()
-	}
 	if c.env.Node != nil {
 		c.env.Node.Start()
+	}
+	if c.Site != nil {
+		c.Site.Start()
 	}
 }
 
@@ -202,12 +174,6 @@ func (c *Container) destroyDefaultComponents() {
 	if c.Site != nil {
 		c.Site.Close()
 		c.Site.Destroy()
-	}
-	if c.env.Mysql != nil {
-		c.env.Mysql.Close()
-	}
-	if c.env.Rdb != nil {
-		c.env.Rdb.Close()
 	}
 	if c.env.Node != nil {
 		c.env.Node.Close()
@@ -245,10 +211,10 @@ func (c *Container) doPrintFrameworkInfo() {
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
-	if c.env.Mysql != nil {
+	if c.Config.Node.Mysql.DSN != "" {
 		infos = append(infos, fmt.Sprintf("Mysql: %v", true))
 	}
-	if c.env.Rdb != nil {
+	if c.Config.Node.Redis.Addr != "" {
 		infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Redis.Addr))
 	}
 
