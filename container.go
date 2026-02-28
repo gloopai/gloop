@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gloopai/gloop/cluster/node"
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
@@ -31,7 +32,7 @@ type ContainerConfig struct {
 	Mysql    pkg.MysqlClientOptions
 	Redis    pkg.RedisClientOptions
 	Site     site.SiteOptions
-	Node     modules.NodeOptions
+	Node     node.NodeOptions
 }
 
 // NewContainer 创建一个容器
@@ -51,13 +52,12 @@ func NewContainer() *Container {
 		},
 	}
 	// 初始化 Node 组件
-	c.env.Node = modules.NewNode(&config.Node)
+	c.env.Node = node.NewNode(&config.Node)
 
 	c.env = &modules.ComponentEnv{
 		Node:   c.env.Node,
 		Events: c.env.Events,
 	}
-	c.env.Node.SetEnv(c.env)
 
 	// 初始化 Site 组件
 	if config.Site.Port != 0 {

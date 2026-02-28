@@ -1,4 +1,4 @@
-package modules
+package node
 
 import (
 	"fmt"
@@ -12,7 +12,6 @@ import (
 
 // Node 组件
 type Node struct {
-	Base
 	NodeId      string
 	NodeName    string
 	Config      *NodeOptions
@@ -74,6 +73,10 @@ func NewNode(config *NodeOptions) *Node {
 	// }
 
 	return node
+}
+
+func (n *Node) Name() string {
+	return "node"
 }
 
 func (n *Node) Init() {
@@ -138,6 +141,11 @@ func (n *Node) Destroy() {
 		n.nsq.Destroy()
 	}
 	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
+}
+
+func (n *Node) SetEnv(env *interface{}) {}
+func (n *Node) GetEnv() *interface{} {
+	return nil
 }
 
 // 添加grpc服务

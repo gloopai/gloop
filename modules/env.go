@@ -3,17 +3,18 @@ package modules
 import (
 	"fmt"
 
+	"github.com/gloopai/gloop/cluster/node"
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/modules/pkg"
 )
 
 type ComponentEnv struct {
-	Node   *Node
+	Node   *node.Node
 	Events *events.EventBus
 }
 
 // GetNode 获取 Node 组件实例
-func (e *ComponentEnv) GetNode() (*Node, error) {
+func (e *ComponentEnv) GetNode() (*node.Node, error) {
 	if e.Node == nil {
 		return nil, fmt.Errorf("node is not initialized")
 	}
