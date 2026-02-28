@@ -23,7 +23,7 @@ func (a *Auth) Name() string {
 	return "auth"
 }
 func (a *Auth) Init() {
-	err := EnsureAuthTableExists(a.Env.DB.Conn)
+	err := EnsureAuthTableExists(a.Env.Mysql.Conn)
 	if err != nil {
 		lib.Log.Error("Failed to ensure auth table exists:", err)
 		return
@@ -59,7 +59,7 @@ func (a *Auth) Register(ctx context.Context, req *modules.RequestPayload) module
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
-	err = RegisterUser(a.Env.DB.Conn, query.Username, query.Password, query.Email)
+	err = RegisterUser(a.Env.Mysql.Conn, query.Username, query.Password, query.Email)
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
@@ -80,7 +80,7 @@ func (a *Auth) Login(ctx context.Context, req *modules.RequestPayload) modules.R
 		return modules.Response.Error(err.Error())
 	}
 
-	loggedInUser, err := LoginUser(a.Env.DB.Conn, query.Username, query.Password)
+	loggedInUser, err := LoginUser(a.Env.Mysql.Conn, query.Username, query.Password)
 	if err != nil {
 		return modules.Response.Error(err.Error())
 	}
@@ -112,7 +112,7 @@ func (a *Auth) LoginByTelegram(ctx context.Context, req *modules.RequestPayload)
 		return modules.Response.Error(err.Error())
 	}
 	telegramUser := &TelegramUser{}
-	_, err = telegramUser.Login(a.Env.DB.Conn, query.InitData, a.Config.TelegramBotToken)
+	_, err = telegramUser.Login(a.Env.Mysql.Conn, query.InitData, a.Config.TelegramBotToken)
 	if err != nil {
 		return modules.Response.Error(fmt.Sprintf("Telegram parse error: %s", err.Error()))
 	}

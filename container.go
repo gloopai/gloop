@@ -21,7 +21,7 @@ type Container struct {
 	Config     *ContainerConfig
 	components []modules.Component
 	Node       *modules.Node
-	Database   *modules.MysqlClient
+	Mysql      *modules.MysqlClient
 	Rdb        *modules.Rdb
 	EventBus   *events.EventBus
 	Site       *site.Site
@@ -30,7 +30,7 @@ type Container struct {
 type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
-	Db       modules.MysqlClientOptions
+	Mysql    modules.MysqlClientOptions
 	Redis    modules.RdbOptions
 	Site     site.SiteOptions
 	Node     modules.NodeOptions
@@ -53,9 +53,9 @@ func NewContainer() *Container {
 	}
 
 	// 数据库链接
-	if config.Db.DSN != "" {
-		dbService := modules.NewMysqlClient(config.Db)
-		c.Database = dbService
+	if config.Mysql.DSN != "" {
+		dbService := modules.NewMysqlClient(config.Mysql)
+		c.Mysql = dbService
 	}
 
 	// 初始化 Redis 组件
@@ -68,7 +68,7 @@ func NewContainer() *Container {
 	if config.Site.Port != 0 {
 		c.Site = site.NewSite(config.Site)
 		c.Site.SetEnv(&modules.ComponentEnv{
-			DB:     c.Database,
+			Mysql:  c.Mysql,
 			Rdb:    c.Rdb,
 			Events: c.EventBus,
 		})
@@ -77,7 +77,7 @@ func NewContainer() *Container {
 	// 初始化 Node 组件
 	c.Node = modules.NewNode(&config.Node)
 	c.Node.SetEnv(&modules.ComponentEnv{
-		DB:     c.Database,
+		Mysql:  c.Mysql,
 		Rdb:    c.Rdb,
 		Events: c.EventBus,
 	})
@@ -121,8 +121,8 @@ func (c *Container) Serve() {
 
 // 初始化 container 默认组件
 func (c *Container) initDefaultComponents() {
-	if c.Database != nil {
-		c.Database.Init()
+	if c.Mysql != nil {
+		c.Mysql.Init()
 	}
 	if c.Rdb != nil {
 		c.Rdb.Init()
@@ -147,7 +147,7 @@ func (c *Container) doInitComponents() {
 		}()
 		comp.SetEnv(&modules.ComponentEnv{
 			Node:   c.Node,
-			DB:     c.Database,
+			Mysql:  c.Mysql,
 			Rdb:    c.Rdb,
 			Events: c.EventBus,
 		})
@@ -171,8 +171,8 @@ func (c *Container) doRegisterComponents() {
 
 // 启动 container 默认组件
 func (c *Container) startDefaultComponents() {
-	if c.Database != nil {
-		c.Database.Start()
+	if c.Mysql != nil {
+		c.Mysql.Start()
 	}
 	if c.Rdb != nil {
 		c.Rdb.Start()
@@ -209,8 +209,8 @@ func (c *Container) destroyDefaultComponents() {
 		c.Site.Close()
 		c.Site.Destroy()
 	}
-	if c.Database != nil {
-		c.Database.Close()
+	if c.Mysql != nil {
+		c.Mysql.Close()
 	}
 	if c.Rdb != nil {
 		c.Rdb.Close()
@@ -251,8 +251,8 @@ func (c *Container) doPrintFrameworkInfo() {
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
-	if c.Database != nil {
-		infos = append(infos, fmt.Sprintf("Database: %s", "mysql"))
+	if c.Mysql != nil {
+		infos = append(infos, fmt.Sprintf("Mysql: %v", true))
 	}
 	if c.Rdb != nil {
 		infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Redis.Addr))
