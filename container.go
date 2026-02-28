@@ -20,11 +20,8 @@ type ContainerProxy struct {
 type Container struct {
 	Config     *ContainerConfig
 	components []modules.Component
-	Node       *modules.Node
-	Mysql      *modules.MysqlClient
-	Rdb        *modules.Rdb
-	EventBus   *events.EventBus
 	Site       *site.Site
+	env        *modules.ComponentEnv
 }
 
 type ContainerConfig struct {
@@ -48,39 +45,41 @@ func NewContainer() *Container {
 	lib.Log.InitLogger(config.LogLevel, nil)
 
 	c := &Container{
-		Config:   config,
-		EventBus: events.NewEventBus(),
+		Config: config,
+		env: &modules.ComponentEnv{
+			Events: events.NewEventBus(),
+		},
 	}
 
 	// 数据库链接
 	if config.Mysql.DSN != "" {
 		dbService := modules.NewMysqlClient(config.Mysql)
-		c.Mysql = dbService
+		c.env.Mysql = dbService
 	}
 
 	// 初始化 Redis 组件
 	if config.Redis.Addr != "" {
 		rdb := modules.NewRdb(&config.Redis)
-		c.Rdb = rdb
+		c.env.Rdb = rdb
 	}
+
+	// 初始化 Node 组件
+	c.env.Node = modules.NewNode(&config.Node)
+
+	c.env = &modules.ComponentEnv{
+		Node:   c.env.Node,
+		Mysql:  c.env.Mysql,
+		Rdb:    c.env.Rdb,
+		Events: c.env.Events,
+	}
+	c.env.Node.SetEnv(c.env)
 
 	// 初始化 Site 组件
 	if config.Site.Port != 0 {
 		c.Site = site.NewSite(config.Site)
-		c.Site.SetEnv(&modules.ComponentEnv{
-			Mysql:  c.Mysql,
-			Rdb:    c.Rdb,
-			Events: c.EventBus,
-		})
+		c.Site.SetEnv(c.env)
 	}
 
-	// 初始化 Node 组件
-	c.Node = modules.NewNode(&config.Node)
-	c.Node.SetEnv(&modules.ComponentEnv{
-		Mysql:  c.Mysql,
-		Rdb:    c.Rdb,
-		Events: c.EventBus,
-	})
 	return c
 }
 
@@ -121,18 +120,18 @@ func (c *Container) Serve() {
 
 // 初始化 container 默认组件
 func (c *Container) initDefaultComponents() {
-	if c.Mysql != nil {
-		c.Mysql.Init()
+	if c.env.Mysql != nil {
+		c.env.Mysql.Init()
 	}
-	if c.Rdb != nil {
-		c.Rdb.Init()
+	if c.env.Rdb != nil {
+		c.env.Rdb.Init()
 	}
 	if c.Site != nil {
 		c.Site.Init()
 	}
 
-	if c.Node != nil {
-		c.Node.Init()
+	if c.env.Node != nil {
+		c.env.Node.Init()
 	}
 }
 
@@ -145,12 +144,7 @@ func (c *Container) doInitComponents() {
 				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
 			}
 		}()
-		comp.SetEnv(&modules.ComponentEnv{
-			Node:   c.Node,
-			Mysql:  c.Mysql,
-			Rdb:    c.Rdb,
-			Events: c.EventBus,
-		})
+		comp.SetEnv(c.env)
 		comp.Init()
 	}
 	lib.Log.Info("🟢 Components INIT Complete!!")
@@ -171,18 +165,18 @@ func (c *Container) doRegisterComponents() {
 
 // 启动 container 默认组件
 func (c *Container) startDefaultComponents() {
-	if c.Mysql != nil {
-		c.Mysql.Start()
+	if c.env.Mysql != nil {
+		c.env.Mysql.Start()
 	}
-	if c.Rdb != nil {
-		c.Rdb.Start()
+	if c.env.Rdb != nil {
+		c.env.Rdb.Start()
 	}
 
 	if c.Site != nil {
 		c.Site.Start()
 	}
-	if c.Node != nil {
-		c.Node.Start()
+	if c.env.Node != nil {
+		c.env.Node.Start()
 	}
 }
 
@@ -209,15 +203,15 @@ func (c *Container) destroyDefaultComponents() {
 		c.Site.Close()
 		c.Site.Destroy()
 	}
-	if c.Mysql != nil {
-		c.Mysql.Close()
+	if c.env.Mysql != nil {
+		c.env.Mysql.Close()
 	}
-	if c.Rdb != nil {
-		c.Rdb.Close()
+	if c.env.Rdb != nil {
+		c.env.Rdb.Close()
 	}
-	if c.Node != nil {
-		c.Node.Close()
-		c.Node.Destroy()
+	if c.env.Node != nil {
+		c.env.Node.Close()
+		c.env.Node.Destroy()
 	}
 }
 
@@ -241,20 +235,20 @@ func (c *Container) doPrintFrameworkInfo() {
 	modules.PrintFrameworkInfo()
 
 	infos := make([]string, 0, 7)
-	if c.Node != nil {
-		infos = append(infos, fmt.Sprintf("Node ID: %s", c.Node.NodeId))
-		infos = append(infos, fmt.Sprintf("Node Name: %s", c.Node.NodeName))
-		if c.Node != nil {
-			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.Node.GetServiceListen()))
-			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.Node.GetServiceAddr()))
+	if c.env.Node != nil {
+		infos = append(infos, fmt.Sprintf("Node ID: %s", c.env.Node.NodeId))
+		infos = append(infos, fmt.Sprintf("Node Name: %s", c.env.Node.NodeName))
+		if c.env.Node != nil {
+			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.env.Node.GetServiceListen()))
+			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.env.Node.GetServiceAddr()))
 		}
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
-	if c.Mysql != nil {
+	if c.env.Mysql != nil {
 		infos = append(infos, fmt.Sprintf("Mysql: %v", true))
 	}
-	if c.Rdb != nil {
+	if c.env.Rdb != nil {
 		infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Redis.Addr))
 	}
 
