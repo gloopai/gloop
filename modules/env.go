@@ -8,7 +8,7 @@ import (
 
 type ComponentEnv struct {
 	Node   *Node
-	DB     *DbService
+	DB     *MysqlClient
 	Rdb    *Rdb
 	Events *events.EventBus
 }
@@ -21,8 +21,8 @@ func (e *ComponentEnv) GetNode() (*Node, error) {
 	return e.Node, nil
 }
 
-// GetDB 获取 DbService 组件实例
-func (e *ComponentEnv) GetDB() (*DbService, error) {
+// GetDB 获取 MysqlClient 组件实例
+func (e *ComponentEnv) GetDB() (*MysqlClient, error) {
 	if e.DB == nil {
 		return nil, fmt.Errorf("database is not initialized")
 	}

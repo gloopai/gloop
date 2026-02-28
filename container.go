@@ -21,7 +21,7 @@ type Container struct {
 	Config     *ContainerConfig
 	components []modules.Component
 	Node       *modules.Node
-	Database   *modules.DbService
+	Database   *modules.MysqlClient
 	Rdb        *modules.Rdb
 	EventBus   *events.EventBus
 	Site       *site.Site
@@ -30,7 +30,7 @@ type Container struct {
 type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
-	Db       modules.DbOptions
+	Db       modules.MysqlClientOptions
 	Redis    modules.RdbOptions
 	Site     site.SiteOptions
 	Node     modules.NodeOptions
@@ -54,7 +54,7 @@ func NewContainer() *Container {
 
 	// 数据库链接
 	if config.Db.DSN != "" {
-		dbService := modules.NewDb(config.Db)
+		dbService := modules.NewMysqlClient(config.Db)
 		c.Database = dbService
 	}
 

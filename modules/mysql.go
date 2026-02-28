@@ -8,30 +8,30 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type DbOptions struct {
+type MysqlClientOptions struct {
 	DSN string // 数据库连接字符串
 }
 
-type DbService struct {
+type MysqlClient struct {
 	Base
 	Id   string // 数据库 ID
 	DSN  string // 数据库连接字符串
 	Conn *gorm.DB
 }
 
-// NewDb 创建一个新的数据库实例
-func NewDb(opt DbOptions) *DbService {
-	return &DbService{
+// NewMysqlClient 创建一个新的 MySQL 客户端实例
+func NewMysqlClient(opt MysqlClientOptions) *MysqlClient {
+	return &MysqlClient{
 		DSN: opt.DSN,
 	}
 }
 
-func (d *DbService) Name() string {
-	return "db"
+func (d *MysqlClient) Name() string {
+	return "mysql"
 }
 
 // 修改 Init 方法以保存数据库连接，并提供一个方法获取连接
-func (d *DbService) Init() {
+func (d *MysqlClient) Init() {
 	// d.printInfo()
 
 	// 设置 gorm 的日志级别
@@ -53,7 +53,7 @@ func (d *DbService) Init() {
 }
 
 // 提供一个方法来获取数据库连接
-func (d *DbService) GetConnection() *gorm.DB {
+func (d *MysqlClient) GetConnection() *gorm.DB {
 	return d.Conn
 }
 
