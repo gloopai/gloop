@@ -67,10 +67,10 @@ func NewNode(config *NodeOptions) *Node {
 	}
 
 	// 初始化 Nsq 客户端
-	// if node.Config.Nsq.LookupdHTTPAddr != "" {
-	// 	nsqClient := pkg.NewNsqClient(node.Config.Nsq)
-	// 	node.nsq = nsqClient
-	// }
+	if node.Config.Nsq.Producer != "" {
+		nsqClient := pkg.NewNsqClient(node.Config.Nsq)
+		node.nsq = nsqClient
+	}
 
 	return node
 }
