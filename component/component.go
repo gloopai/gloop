@@ -1,4 +1,4 @@
-package modules
+package component
 
 type Component interface {
 	// Name 组件名称
@@ -13,14 +13,9 @@ type Component interface {
 	Close()
 	// Destroy 销毁组件
 	Destroy()
-	// 写入上下文
-	SetEnv(ctx *ComponentEnv)
-	// 读取上下文
-	GetEnv() *ComponentEnv
 }
 
 type Base struct {
-	Env *ComponentEnv
 }
 
 // Name 组件名称
@@ -40,13 +35,3 @@ func (b *Base) Close() {}
 
 // Destroy 销毁组件
 func (b *Base) Destroy() {}
-
-// SetEnv 写入上下文
-func (b *Base) SetEnv(env *ComponentEnv) {
-	b.Env = env
-}
-
-// GetEnv 读取上下文
-func (b *Base) GetEnv() *ComponentEnv {
-	return b.Env
-}

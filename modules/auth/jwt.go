@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"github.com/gloopai/gloop/modules"
+	"github.com/gloopai/gloop/schema"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -39,7 +39,7 @@ func NewJWTManager(opt JWTOptions) *JWTManager {
 	}
 }
 
-func (j *JWTManager) GenerateToken(auth modules.RequestAuth) (string, error) {
+func (j *JWTManager) GenerateToken(auth schema.RequestAuth) (string, error) {
 	claims := AuthJwtClaims{
 		UserId:   auth.UserId,
 		UserName: auth.Username,
@@ -51,7 +51,7 @@ func (j *JWTManager) GenerateToken(auth modules.RequestAuth) (string, error) {
 	return token.SignedString([]byte(j.SecretKey))
 }
 
-func (j *JWTManager) VerifyToken(tokenString string) (modules.RequestAuth, error) {
+func (j *JWTManager) VerifyToken(tokenString string) (schema.RequestAuth, error) {
 	claims := &AuthJwtClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -64,14 +64,14 @@ func (j *JWTManager) VerifyToken(tokenString string) (modules.RequestAuth, error
 	})
 
 	if err != nil {
-		return modules.RequestAuth{}, err
+		return schema.RequestAuth{}, err
 	}
 
 	if !token.Valid {
-		return modules.RequestAuth{}, jwt.ErrSignatureInvalid
+		return schema.RequestAuth{}, jwt.ErrSignatureInvalid
 	}
 
-	return modules.RequestAuth{
+	return schema.RequestAuth{
 		UserId:   claims.UserId,
 		Username: claims.UserName,
 	}, nil

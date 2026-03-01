@@ -3,8 +3,10 @@ package node
 import (
 	"fmt"
 
+	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules/pkg"
+	"github.com/gloopai/gloop/modules/rest"
 	"github.com/gloopai/gloop/registry/consul"
 	ggrpc "github.com/gloopai/gloop/transport/grpc"
 	"google.golang.org/grpc"
@@ -15,11 +17,13 @@ type Node struct {
 	NodeId      string
 	NodeName    string
 	Config      *NodeOptions
+	events      *events.EventBus
 	transporter *ggrpc.Transporter
 	registry    *consul.Registry
 	rdb         *pkg.RedisClient
 	mysql       *pkg.MysqlClient
 	nsq         *pkg.NsqClient
+	rest        *rest.Rest
 }
 
 type NodeOptions struct {
@@ -37,6 +41,8 @@ type NodeOptions struct {
 	Mysql pkg.MysqlClientOptions
 	// Nsq 配置
 	Nsq pkg.NsqClientOptions
+	// Rest 配置
+	Rest rest.RestOptions
 }
 
 func NewNode(config *NodeOptions) *Node {
@@ -72,6 +78,13 @@ func NewNode(config *NodeOptions) *Node {
 		node.nsq = nsqClient
 	}
 
+	if node.Config.Rest.Port != 0 {
+		node.rest = rest.NewRest(&rest.Proxy{
+			Options: &node.Config.Rest,
+			Mysql:   node.mysql,
+		})
+	}
+
 	return node
 }
 
@@ -90,6 +103,10 @@ func (n *Node) Init() {
 		n.nsq.Init()
 	}
 
+	if n.rest != nil {
+		n.rest.Init()
+	}
+
 	// 初始化注册中心
 	n.registry, _ = consul.NewRegistry(&n.Config.Consul)
 
@@ -106,6 +123,10 @@ func (n *Node) Start() error {
 
 	if n.nsq != nil {
 		n.nsq.Start()
+	}
+
+	if n.rest != nil {
+		n.rest.Start()
 	}
 
 	// 启动 gRPC 服务并注册到注册中心
@@ -127,6 +148,10 @@ func (n *Node) Close() {
 		n.nsq.Close()
 	}
 
+	if n.rest != nil {
+		n.rest.Close()
+	}
+
 	n.transporter.Stop()
 	n.registry.Close()
 }
@@ -140,12 +165,17 @@ func (n *Node) Destroy() {
 	if n.nsq != nil {
 		n.nsq.Destroy()
 	}
+
+	if n.rest != nil {
+		n.rest.Destroy()
+	}
+
 	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
 }
 
-func (n *Node) SetEnv(env *interface{}) {}
-func (n *Node) GetEnv() *interface{} {
-	return nil
+// / UseEvents 注入事件总线
+func (n *Node) UseEvents(events *events.EventBus) {
+	n.events = events
 }
 
 // 添加grpc服务
@@ -193,4 +223,20 @@ func (n *Node) GetNsq() (*pkg.NsqClient, error) {
 		return nil, fmt.Errorf("nsq client is not initialized")
 	}
 	return n.nsq, nil
+}
+
+func (n *Node) GetRest() (*rest.Rest, error) {
+	if n.rest == nil {
+		return nil, fmt.Errorf("rest is not initialized")
+	}
+	return n.rest, nil
+}
+
+// Proxy 获取节点的代理对象
+func (n *Node) Proxy() *Proxy {
+	return &Proxy{
+		NodeId:   n.NodeId,
+		NodeName: n.NodeName,
+		Node:     n,
+	}
 }

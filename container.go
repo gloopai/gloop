@@ -5,25 +5,27 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	"github.com/gloopai/gloop/cluster/node"
+	"github.com/gloopai/gloop/component"
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
 	"github.com/gloopai/gloop/modules"
 	"github.com/gloopai/gloop/modules/pkg"
-	"github.com/gloopai/gloop/modules/site"
+	"github.com/gloopai/gloop/modules/rest"
 )
 
 type ContainerProxy struct {
-	Site *site.Site
+	Node *node.Node
 }
 
 type Container struct {
 	Config     *ContainerConfig
-	components []modules.Component
-	Site       *site.Site
-	env        *modules.ComponentEnv
+	components []component.Component
+	events     *events.EventBus
+	node       *node.Node
 }
 
 type ContainerConfig struct {
@@ -31,7 +33,7 @@ type ContainerConfig struct {
 	Debug    bool
 	Mysql    pkg.MysqlClientOptions
 	Redis    pkg.RedisClientOptions
-	Site     site.SiteOptions
+	Rest     rest.RestOptions
 	Node     node.NodeOptions
 }
 
@@ -47,23 +49,11 @@ func NewContainer() *Container {
 
 	c := &Container{
 		Config: config,
-		env: &modules.ComponentEnv{
-			Events: events.NewEventBus(),
-		},
+		events: events.NewEventBus(),
 	}
 	// 初始化 Node 组件
-	c.env.Node = node.NewNode(&config.Node)
-
-	c.env = &modules.ComponentEnv{
-		Node:   c.env.Node,
-		Events: c.env.Events,
-	}
-
-	// 初始化 Site 组件
-	if config.Site.Port != 0 {
-		c.Site = site.NewSite(config.Site)
-		c.Site.SetEnv(c.env)
-	}
+	c.node = node.NewNode(&config.Node)
+	c.node.UseEvents(c.events) // 注入事件总线
 
 	return c
 }
@@ -79,7 +69,7 @@ func loadOptions() (*ContainerConfig, error) {
 }
 
 // Add 添加组件
-func (c *Container) Add(components ...modules.Component) {
+func (c *Container) Add(components ...component.Component) {
 	c.components = append(c.components, components...)
 }
 
@@ -105,12 +95,8 @@ func (c *Container) Serve() {
 
 // 初始化 container 默认组件
 func (c *Container) initDefaultComponents() {
-	if c.env.Node != nil {
-		c.env.Node.Init()
-	}
-
-	if c.Site != nil {
-		c.Site.Init()
+	if c.node != nil {
+		c.node.Init()
 	}
 }
 
@@ -120,10 +106,9 @@ func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v Init", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Init\nStack trace:\n%s", comp.Name(), r, string(debug.Stack()))
 			}
 		}()
-		comp.SetEnv(c.env)
 		comp.Init()
 	}
 	lib.Log.Info("🟢 Components INIT Complete!!")
@@ -134,7 +119,7 @@ func (c *Container) doRegisterComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v Register", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Register\nStack trace:\n%s", comp.Name(), r, string(debug.Stack()))
 			}
 		}()
 		comp.Register()
@@ -144,11 +129,8 @@ func (c *Container) doRegisterComponents() {
 
 // 启动 container 默认组件
 func (c *Container) startDefaultComponents() {
-	if c.env.Node != nil {
-		c.env.Node.Start()
-	}
-	if c.Site != nil {
-		c.Site.Start()
+	if c.node != nil {
+		c.node.Start()
 	}
 }
 
@@ -158,11 +140,11 @@ func (c *Container) doStartComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v Start", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Start\nStack trace:\n%s", comp.Name(), r, string(debug.Stack()))
 			}
 		}()
 		if err := comp.Start(); err != nil {
-			lib.Log.Errorf("Failed to start component %s: %v", comp.Name(), err)
+			lib.Log.Errorf("Failed to start component %s: %v\nStack trace:\n%s", comp.Name(), err, string(debug.Stack()))
 		}
 	}
 
@@ -171,13 +153,9 @@ func (c *Container) doStartComponents() {
 
 // 销毁 container 默认组件
 func (c *Container) destroyDefaultComponents() {
-	if c.Site != nil {
-		c.Site.Close()
-		c.Site.Destroy()
-	}
-	if c.env.Node != nil {
-		c.env.Node.Close()
-		c.env.Node.Destroy()
+	if c.node != nil {
+		c.node.Close()
+		c.node.Destroy()
 	}
 }
 
@@ -188,7 +166,7 @@ func (c *Container) doDestroyComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v Destroy", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Destroy\nStack trace:\n%s", comp.Name(), r, string(debug.Stack()))
 			}
 		}()
 		comp.Destroy()
@@ -201,12 +179,12 @@ func (c *Container) doPrintFrameworkInfo() {
 	modules.PrintFrameworkInfo()
 
 	infos := make([]string, 0, 7)
-	if c.env.Node != nil {
-		infos = append(infos, fmt.Sprintf("Node ID: %s", c.env.Node.NodeId))
-		infos = append(infos, fmt.Sprintf("Node Name: %s", c.env.Node.NodeName))
-		if c.env.Node != nil {
-			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.env.Node.GetServiceListen()))
-			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.env.Node.GetServiceAddr()))
+	if c.node != nil {
+		infos = append(infos, fmt.Sprintf("Node ID: %s", c.node.NodeId))
+		infos = append(infos, fmt.Sprintf("Node Name: %s", c.node.NodeName))
+		if c.node != nil {
+			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.node.GetServiceListen()))
+			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.node.GetServiceAddr()))
 		}
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
@@ -218,8 +196,8 @@ func (c *Container) doPrintFrameworkInfo() {
 		infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Redis.Addr))
 	}
 
-	if c.Config.Site.Port != 0 {
-		infos = append(infos, fmt.Sprintf("Site Port: %d", c.Config.Site.Port))
+	if c.Config.Rest.Port != 0 {
+		infos = append(infos, fmt.Sprintf("Rest Port: %d", c.Config.Rest.Port))
 	}
 	modules.PrintBoxInfo("Container", infos...)
 }
@@ -227,6 +205,6 @@ func (c *Container) doPrintFrameworkInfo() {
 // Proxy 获取容器的代理对象
 func (c *Container) Proxy() *ContainerProxy {
 	return &ContainerProxy{
-		Site: c.Site,
+		Node: c.node,
 	}
 }

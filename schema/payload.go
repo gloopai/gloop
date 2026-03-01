@@ -1,4 +1,4 @@
-package modules
+package schema
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ type ContextKey string
 // TraceIDContextKey 在 context 中存放 trace id 的 key，跨包可用
 var TraceIDContextKey ContextKey = "trace_id"
 
-type RequestPayload struct {
+type Request struct {
 	TraceId string      `json:"trace_id"`
 	Auth    RequestAuth `json:"auth"`
 	Command string      `json:"command"`
@@ -28,12 +28,12 @@ type RequestAuth struct {
 }
 
 // Data 反序列化
-func (d *RequestPayload) Unmarshal(v interface{}) error {
+func (d *Request) Unmarshal(v interface{}) error {
 	return lib.Convert.InterfaceToStruct(d.Data, &v)
 }
 
 // 获取page数据
-func (d *RequestPayload) UnmarshalPage(v interface{}, pageSize int) (CurrentPage int, StartNum int, er error) {
+func (d *Request) UnmarshalPage(v interface{}, pageSize int) (CurrentPage int, StartNum int, er error) {
 	type pageObj struct {
 		Page int `json:"page"`
 	}
@@ -47,7 +47,7 @@ func (d *RequestPayload) UnmarshalPage(v interface{}, pageSize int) (CurrentPage
 	return page.Page, startNum, d.Unmarshal(v)
 }
 
-func (d *RequestPayload) UnmarshalPageBySize(v interface{}, pageSize int) (CurrentPage int, StartNum int, pagesize int, er error) {
+func (d *Request) UnmarshalPageBySize(v interface{}, pageSize int) (CurrentPage int, StartNum int, pagesize int, er error) {
 	type pageObj struct {
 		Page     int `json:"page"`
 		PageSize int `json:"pagesize"`
@@ -71,41 +71,42 @@ func (d *RequestPayload) UnmarshalPageBySize(v interface{}, pageSize int) (Curre
  */
 //
 
-func (d *RequestPayload) Validator(v interface{}) error {
+func (d *Request) Validator(v interface{}) error {
 	return lib.Verification.Validator(v)
 }
 
-type ResponsePayload struct {
+// // Response 定义标准的 API 响应结构体
+type Response struct {
 	TraceId string      `json:"trace_id"`
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
-func ParseJSONRequest(r *http.Request, payload *RequestPayload) error {
+func ParseJSONRequest(r *http.Request, payload *Request) error {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	return decoder.Decode(payload)
 }
 
-func WriteJSONResponse(w http.ResponseWriter, response ResponsePayload) {
+func WriteJSONResponse(w http.ResponseWriter, response Response) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-var Response ResponsePayload
+var PayloadResponse Response
 
 // 返回异常
-func (r *ResponsePayload) Error(msg string) ResponsePayload {
-	return ResponsePayload{
+func (r *Response) Error(msg string) Response {
+	return Response{
 		Code:    50000,
 		Message: msg,
 		Data:    "",
 	}
 }
 
-func (r *ResponsePayload) LoginDated() ResponsePayload {
-	return ResponsePayload{
+func (r *Response) LoginDated() Response {
+	return Response{
 		Code:    40000,
 		Message: "登录过期，需要重新登录",
 		Data:    nil,
@@ -113,16 +114,16 @@ func (r *ResponsePayload) LoginDated() ResponsePayload {
 }
 
 // 返回20000
-func (r *ResponsePayload) SuccessNone() ResponsePayload {
-	return ResponsePayload{
+func (r *Response) SuccessNone() Response {
+	return Response{
 		Code:    20000,
 		Message: "",
 		Data:    nil,
 	}
 }
 
-func (r *ResponsePayload) Success(v interface{}) ResponsePayload {
-	return ResponsePayload{
+func (r *Response) Success(v interface{}) Response {
+	return Response{
 		Code:    20000,
 		Message: "",
 		Data:    v,
@@ -130,8 +131,8 @@ func (r *ResponsePayload) Success(v interface{}) ResponsePayload {
 }
 
 // 返回异常
-func (r *ResponsePayload) LogError(msg string, logId string) ResponsePayload {
-	return ResponsePayload{
+func (r *Response) LogError(msg string, logId string) Response {
+	return Response{
 		Code:    50000,
 		Message: msg,
 		Data:    "",
@@ -139,7 +140,7 @@ func (r *ResponsePayload) LogError(msg string, logId string) ResponsePayload {
 }
 
 // 返回列表数据
-func (r *ResponsePayload) OrginList(list interface{}, page int, pagesize int, total int) ResponsePayload {
+func (r *Response) OrginList(list interface{}, page int, pagesize int, total int) Response {
 	data := make(map[string]interface{})
 	data["page"] = page
 	data["pagesize"] = pagesize
@@ -147,7 +148,7 @@ func (r *ResponsePayload) OrginList(list interface{}, page int, pagesize int, to
 	data["list"] = list
 	resMap := make(map[string]interface{})
 	resMap["items"] = data
-	return ResponsePayload{
+	return Response{
 		Code:    20000,
 		Message: "",
 		Data:    resMap,
@@ -155,7 +156,7 @@ func (r *ResponsePayload) OrginList(list interface{}, page int, pagesize int, to
 }
 
 // 返回列表数据
-func (r *ResponsePayload) List(list interface{}, page int, pagesize int, total int) ResponsePayload {
+func (r *Response) List(list interface{}, page int, pagesize int, total int) Response {
 	data := make(map[string]interface{})
 	data["page"] = page
 	data["pagesize"] = pagesize
@@ -165,14 +166,14 @@ func (r *ResponsePayload) List(list interface{}, page int, pagesize int, total i
 	// format["update_time"] = "update_time"
 	resList, _ := r.ListFormatCreateTimeAndUpdateTime(list, format)
 	data["list"] = resList
-	return ResponsePayload{
+	return Response{
 		Code:    20000,
 		Message: "",
 		Data:    data,
 	}
 }
 
-func (r *ResponsePayload) ListFormatCreateTimeAndUpdateTime(list interface{}, formatMap map[string]interface{}) ([]map[string]interface{}, error) {
+func (r *Response) ListFormatCreateTimeAndUpdateTime(list interface{}, formatMap map[string]interface{}) ([]map[string]interface{}, error) {
 	jsonByte, _ := json.Marshal(list)
 	listMap := make([]map[string]interface{}, 0)
 	err := json.Unmarshal(jsonByte, &listMap)
@@ -201,7 +202,7 @@ func (r *ResponsePayload) ListFormatCreateTimeAndUpdateTime(list interface{}, fo
 }
 
 // 返回列表数据并对指定的字段进行时间戳格式化
-func (r *ResponsePayload) ListFormatDate(list interface{}, page int, pagesize int, total int, formatMap map[string]interface{}) ResponsePayload {
+func (r *Response) ListFormatDate(list interface{}, page int, pagesize int, total int, formatMap map[string]interface{}) Response {
 	resMap, _ := r.ListFormatCreateTimeAndUpdateTime(list, formatMap)
 	return r.List(resMap, page, pagesize, total)
 }
