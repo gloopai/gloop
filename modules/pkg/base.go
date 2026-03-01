@@ -5,7 +5,7 @@ type Base struct {
 }
 
 // Name 组件名称
-func (b *Base) Name() string { return "base" }
+func (b *Base) Name() string { return "pkg base" }
 
 // Init 初始化组件
 func (b *Base) Init() {}

@@ -120,7 +120,7 @@ func (c *Container) doInitComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Init", comp.Name(), r)
 			}
 		}()
 		comp.SetEnv(c.env)
@@ -134,7 +134,7 @@ func (c *Container) doRegisterComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Register", comp.Name(), r)
 			}
 		}()
 		comp.Register()
@@ -158,7 +158,7 @@ func (c *Container) doStartComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Start", comp.Name(), r)
 			}
 		}()
 		if err := comp.Start(); err != nil {
@@ -188,7 +188,7 @@ func (c *Container) doDestroyComponents() {
 	for _, comp := range c.components {
 		defer func() {
 			if r := recover(); r != nil {
-				lib.Log.Errorf("Recovered from panic in component %s: %v", comp.Name(), r)
+				lib.Log.Errorf("Recovered from panic in component %s: %v Destroy", comp.Name(), r)
 			}
 		}()
 		comp.Destroy()

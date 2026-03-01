@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 
+	"github.com/gloopai/gloop/lib"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -39,7 +40,7 @@ func (d *MysqlClient) Start() error {
 	// 连接 MySQL 数据库
 	db, err := gorm.Open(mysql.Open(d.DSN), gormConfig)
 	if err != nil {
-		fmt.Printf("failed to open database: %v\n", err)
+		lib.Log.Errorf("failed to open database: %v\n", err)
 		d.Conn = nil
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
