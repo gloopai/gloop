@@ -1,9 +1,12 @@
 package pkg
 
 type NsqClientOptions struct {
+	Producer  string // 生产者服务器
+	Subscribe string // 消息订阅服务器
 }
 
 type NsqClient struct {
+	Base
 }
 
 func NewNsqClient(options NsqClientOptions) *NsqClient {
@@ -23,9 +26,3 @@ func (n *NsqClient) Start() error {
 func (n *NsqClient) Close() {}
 
 func (n *NsqClient) Destroy() {}
-
-func (n *NsqClient) SetEnv(env *interface{}) {}
-
-func (n *NsqClient) GetEnv() *interface{} {
-	return nil
-}

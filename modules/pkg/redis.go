@@ -20,6 +20,7 @@ type RedisClientOptions struct {
 }
 
 type RedisClient struct {
+	Base
 	Config      *RedisClientOptions
 	redisClient *gredis.Client
 	poolMu      sync.Mutex
@@ -65,10 +66,6 @@ func (r *RedisClient) Name() string {
 	return "rdb"
 }
 
-func (r *RedisClient) Init() {
-	// r.printInfo()
-}
-
 func (r *RedisClient) Start() error {
 	if r.Config == nil {
 		return fmt.Errorf("rdb config is nil")
@@ -91,14 +88,6 @@ func (r *RedisClient) Close() {
 		_ = r.redisClient.Close()
 		r.redisClient = nil
 	}
-}
-
-func (r *RedisClient) Destroy() {}
-
-func (r *RedisClient) SetEnv(env *interface{}) {}
-
-func (r *RedisClient) GetEnv() *interface{} {
-	return nil
 }
 
 func (r *RedisClient) GetConn() *gredis.Client {

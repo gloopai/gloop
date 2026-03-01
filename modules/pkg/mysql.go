@@ -13,6 +13,7 @@ type MysqlClientOptions struct {
 }
 
 type MysqlClient struct {
+	Base
 	Id   string // 数据库 ID
 	DSN  string // 数据库连接字符串
 	Conn *gorm.DB
@@ -27,8 +28,6 @@ func NewMysqlClient(opt MysqlClientOptions) *MysqlClient {
 
 func (d *MysqlClient) Name() string {
 	return "mysql"
-}
-func (d *MysqlClient) Init() {
 }
 
 func (d *MysqlClient) Start() error {
@@ -47,16 +46,6 @@ func (d *MysqlClient) Start() error {
 
 	// 将数据库连接保存到结构体中
 	d.Conn = db
-	return nil
-}
-
-func (d *MysqlClient) Close() {}
-
-func (d *MysqlClient) Destroy() {}
-
-func (d *MysqlClient) SetEnv(env *interface{}) {}
-
-func (d *MysqlClient) GetEnv() *interface{} {
 	return nil
 }
 
