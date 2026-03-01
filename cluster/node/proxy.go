@@ -9,6 +9,7 @@ import (
 	"github.com/gloopai/gloop/modules/auth"
 	"github.com/gloopai/gloop/modules/pkg"
 	"github.com/gloopai/gloop/schema"
+	"google.golang.org/grpc"
 )
 
 type Proxy struct {
@@ -68,4 +69,22 @@ func (p *Proxy) GetMysql() (*pkg.MysqlClient, error) {
 		return nil, errors.New("MySQL client is not initialized")
 	}
 	return p.Node.mysql, nil
+}
+
+// GetRedis 获取 Redis 客户端
+func (p *Proxy) GetRedis() (*pkg.RedisClient, error) {
+	if p.Node.rdb == nil {
+		return nil, errors.New("Redis client is not initialized")
+	}
+	return p.Node.rdb, nil
+}
+
+// 注册 gRpc 服务
+func (p *Proxy) AddServiceProvider(desc *grpc.ServiceDesc, provider any) {
+	p.Node.transporter.AddServiceProvider(desc, provider)
+}
+
+// 获取 gRPC 客户端
+func (p *Proxy) GetServiceClient() (*grpc.ClientConn, error) {
+	return p.Node.ServiceClient()
 }
