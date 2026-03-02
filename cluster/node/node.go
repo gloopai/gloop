@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
@@ -51,6 +52,37 @@ func NewNode(config *NodeOptions) *Node {
 	}
 	node.NodeId = lib.Conf.GetString(config.Id, lib.Generate.Guid())
 	node.NodeName = lib.Conf.GetString(config.Name, "node")
+
+	if node.Config.Mysql.DSN == "" {
+		lib.Log.Warn("[node] MySQL DSN is not provided, MySQL client will not be initialized")
+		os.Exit(0)
+	}
+	mysqlClient := pkg.NewMysqlClient(node.Config.Mysql)
+	node.mysql = mysqlClient
+
+	if node.Config.Redis.Addr == "" {
+		lib.Log.Warn("[node] Redis address is not provided, Redis client will not be initialized")
+		os.Exit(0)
+	}
+	// 初始化 Redis 客户端
+	rdbClient := pkg.NewRedisClient(&node.Config.Redis)
+	node.rdb = rdbClient
+
+	if node.Config.Nsq.Producer == "" || node.Config.Nsq.Subscribe == "" {
+		lib.Log.Warn("[node] Nsq producer address or subscribe address is not provided, Nsq client will not be initialized")
+		os.Exit(0)
+	}
+	// 初始化 Nsq 客户端
+	nsqClient := pkg.NewNsqClient(node.Config.Nsq)
+	node.nsq = nsqClient
+
+	if node.Config.Rest.Port != 0 {
+		node.rest = rest.NewRest(&rest.Proxy{
+			Options: &node.Config.Rest,
+			Mysql:   node.mysql,
+		})
+	}
+
 	// 初始化 GRpc transporter
 	transporter, err := ggrpc.NewTransporter(&ggrpc.Options{
 		Addr: node.Config.Addr,
@@ -59,31 +91,6 @@ func NewNode(config *NodeOptions) *Node {
 		lib.Log.Fatalf("failed to create gRPC transport: %v", err)
 	}
 	node.transporter = transporter
-
-	// 初始化 MySQL 客户端
-	if node.Config.Mysql.DSN != "" {
-		mysqlClient := pkg.NewMysqlClient(node.Config.Mysql)
-		node.mysql = mysqlClient
-	}
-
-	// 初始化 Redis 客户端
-	if node.Config.Redis.Addr != "" {
-		rdbClient := pkg.NewRedisClient(&node.Config.Redis)
-		node.rdb = rdbClient
-	}
-
-	// 初始化 Nsq 客户端
-	if node.Config.Nsq.Producer != "" {
-		nsqClient := pkg.NewNsqClient(node.Config.Nsq)
-		node.nsq = nsqClient
-	}
-
-	if node.Config.Rest.Port != 0 {
-		node.rest = rest.NewRest(&rest.Proxy{
-			Options: &node.Config.Rest,
-			Mysql:   node.mysql,
-		})
-	}
 
 	return node
 }
