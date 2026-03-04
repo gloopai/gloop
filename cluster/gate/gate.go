@@ -1,4 +1,4 @@
-package node
+package gate
 
 import (
 	"fmt"
@@ -13,11 +13,11 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Node 组件
+// Gate 组件
 type Node struct {
 	NodeId      string
 	NodeName    string
-	Config      *NodeOptions
+	Config      *GateOptions
 	events      *events.EventBus
 	transporter *ggrpc.Transporter
 	registry    *consul.Registry
@@ -27,7 +27,7 @@ type Node struct {
 	rest        *rest.Rest
 }
 
-type NodeOptions struct {
+type GateOptions struct {
 	// 节点 id，全局必须唯一
 	Id string
 	// 节点名称，便于识别
@@ -46,22 +46,22 @@ type NodeOptions struct {
 	Rest rest.RestOptions
 }
 
-func NewNode(config *NodeOptions) *Node {
+func NewNode(config *GateOptions) *Node {
 	node := &Node{
 		Config: config,
 	}
 	node.NodeId = lib.Conf.GetString(config.Id, lib.Generate.Guid())
-	node.NodeName = lib.Conf.GetString(config.Name, "node")
+	node.NodeName = lib.Conf.GetString(config.Name, "gate")
 
 	if node.Config.Mysql.DSN == "" {
-		lib.Log.Warn("[node] MySQL DSN is not provided, MySQL client will not be initialized")
+		lib.Log.Warn("[gate] MySQL DSN is not provided, MySQL client will not be initialized")
 		os.Exit(0)
 	}
 	mysqlClient := pkg.NewMysqlClient(node.Config.Mysql)
 	node.mysql = mysqlClient
 
 	if node.Config.Redis.Addr == "" {
-		lib.Log.Warn("[node] Redis address is not provided, Redis client will not be initialized")
+		lib.Log.Warn("[gate] Redis address is not provided, Redis client will not be initialized")
 		os.Exit(0)
 	}
 	// 初始化 Redis 客户端
@@ -69,7 +69,7 @@ func NewNode(config *NodeOptions) *Node {
 	node.rdb = rdbClient
 
 	if node.Config.Nsq.Producer == "" || node.Config.Nsq.Subscribe == "" {
-		lib.Log.Warn("[node] Nsq producer address or subscribe address is not provided, Nsq client will not be initialized")
+		lib.Log.Warn("[gate] Nsq producer address or subscribe address is not provided, Nsq client will not be initialized")
 		os.Exit(0)
 	}
 	// 初始化 Nsq 客户端
@@ -95,155 +95,155 @@ func NewNode(config *NodeOptions) *Node {
 	return node
 }
 
-func (n *Node) Name() string {
-	return "node"
+func (g *Node) Name() string {
+	return "gate"
 }
 
-func (n *Node) Init() {
-	if n.mysql != nil {
-		n.mysql.Init()
+func (g *Node) Init() {
+	if g.mysql != nil {
+		g.mysql.Init()
 	}
-	if n.rdb != nil {
-		n.rdb.Init()
+	if g.rdb != nil {
+		g.rdb.Init()
 	}
-	if n.nsq != nil {
-		n.nsq.Init()
+	if g.nsq != nil {
+		g.nsq.Init()
 	}
 
-	if n.rest != nil {
-		n.rest.Init()
+	if g.rest != nil {
+		g.rest.Init()
 	}
 
 	// 初始化注册中心
-	n.registry, _ = consul.NewRegistry(&n.Config.Consul)
+	g.registry, _ = consul.NewRegistry(&g.Config.Consul)
 
 }
 
-func (n *Node) Start() error {
-	if n.mysql != nil {
-		n.mysql.Start()
+func (g *Node) Start() error {
+	if g.mysql != nil {
+		g.mysql.Start()
 	}
 
-	if n.rdb != nil {
-		n.rdb.Start()
+	if g.rdb != nil {
+		g.rdb.Start()
 	}
 
-	if n.nsq != nil {
-		n.nsq.Start()
+	if g.nsq != nil {
+		g.nsq.Start()
 	}
 
-	if n.rest != nil {
-		n.rest.Start()
+	if g.rest != nil {
+		g.rest.Start()
 	}
 
 	// 启动 gRPC 服务并注册到注册中心
 	go func() {
-		n.transporter.Start()
+		g.transporter.Start()
 	}()
-	n.registry.Register(n.NodeId, n.NodeName, n.transporter.GetExposeAddr())
+	g.registry.Register(g.NodeId, g.NodeName, g.transporter.GetExposeAddr())
 	return nil
 }
 
-func (n *Node) Close() {
-	if n.mysql != nil {
-		n.mysql.Close()
+func (g *Node) Close() {
+	if g.mysql != nil {
+		g.mysql.Close()
 	}
-	if n.rdb != nil {
-		n.rdb.Close()
+	if g.rdb != nil {
+		g.rdb.Close()
 	}
-	if n.nsq != nil {
-		n.nsq.Close()
-	}
-
-	if n.rest != nil {
-		n.rest.Close()
+	if g.nsq != nil {
+		g.nsq.Close()
 	}
 
-	n.transporter.Stop()
-	n.registry.Close()
+	if g.rest != nil {
+		g.rest.Close()
+	}
+
+	g.transporter.Stop()
+	g.registry.Close()
 }
-func (n *Node) Destroy() {
-	if n.mysql != nil {
-		n.mysql.Destroy()
+func (g *Node) Destroy() {
+	if g.mysql != nil {
+		g.mysql.Destroy()
 	}
-	if n.rdb != nil {
-		n.rdb.Destroy()
+	if g.rdb != nil {
+		g.rdb.Destroy()
 	}
-	if n.nsq != nil {
-		n.nsq.Destroy()
-	}
-
-	if n.rest != nil {
-		n.rest.Destroy()
+	if g.nsq != nil {
+		g.nsq.Destroy()
 	}
 
-	lib.Log.Infof("Node %s is destroyed", n.Config.Id)
+	if g.rest != nil {
+		g.rest.Destroy()
+	}
+
+	lib.Log.Infof("Node %s is destroyed", g.Config.Id)
 }
 
 // / UseEvents 注入事件总线
-func (n *Node) UseEvents(events *events.EventBus) {
-	n.events = events
+func (g *Node) UseEvents(events *events.EventBus) {
+	g.events = events
 }
 
 // 添加grpc服务
-func (n *Node) AddServiceProvider(desc *grpc.ServiceDesc, provider any) {
-	n.transporter.AddServiceProvider(desc, provider)
+func (g *Node) AddServiceProvider(desc *grpc.ServiceDesc, provider any) {
+	g.transporter.AddServiceProvider(desc, provider)
 }
 
-func (n *Node) GetServiceListen() string {
-	return n.transporter.GetListenAddr()
+func (g *Node) GetServiceListen() string {
+	return g.transporter.GetListenAddr()
 }
 
 // 获取服务地址
-func (n *Node) GetServiceAddr() string {
-	return n.transporter.GetExposeAddr()
+func (g *Node) GetServiceAddr() string {
+	return g.transporter.GetExposeAddr()
 }
 
 // 获取grpc客户端连接
-func (n *Node) ServiceClient() (*grpc.ClientConn, error) {
-	consulTarget, err := n.registry.GetServiceTarget(n.NodeName)
+func (g *Node) ServiceClient() (*grpc.ClientConn, error) {
+	consulTarget, err := g.registry.GetServiceTarget(g.NodeName)
 	if err != nil {
 		return nil, err
 	}
-	return n.transporter.NewClient(consulTarget)
+	return g.transporter.NewClient(consulTarget)
 }
 
 // GetMysql 获取 MySQL 客户端实例
-func (n *Node) GetMysql() (*pkg.MysqlClient, error) {
-	if n.mysql == nil {
+func (g *Node) GetMysql() (*pkg.MysqlClient, error) {
+	if g.mysql == nil {
 		return nil, fmt.Errorf("mysql client is not initialized")
 	}
-	return n.mysql, nil
+	return g.mysql, nil
 }
 
 // GetRdb 获取 Redis 客户端实例
-func (n *Node) GetRdb() (*pkg.RedisClient, error) {
-	if n.rdb == nil {
+func (g *Node) GetRdb() (*pkg.RedisClient, error) {
+	if g.rdb == nil {
 		return nil, fmt.Errorf("redis client is not initialized")
 	}
-	return n.rdb, nil
+	return g.rdb, nil
 }
 
 // GetNsq 获取 Nsq 客户端实例
-func (n *Node) GetNsq() (*pkg.NsqClient, error) {
-	if n.nsq == nil {
+func (g *Node) GetNsq() (*pkg.NsqClient, error) {
+	if g.nsq == nil {
 		return nil, fmt.Errorf("nsq client is not initialized")
 	}
-	return n.nsq, nil
+	return g.nsq, nil
 }
 
-func (n *Node) GetRest() (*rest.Rest, error) {
-	if n.rest == nil {
+func (g *Node) GetRest() (*rest.Rest, error) {
+	if g.rest == nil {
 		return nil, fmt.Errorf("rest is not initialized")
 	}
-	return n.rest, nil
+	return g.rest, nil
 }
 
 // Proxy 获取节点的代理对象
-func (n *Node) Proxy() *Proxy {
+func (g *Node) Proxy() *Proxy {
 	return &Proxy{
-		NodeId:   n.NodeId,
-		NodeName: n.NodeName,
-		Node:     n,
+		NodeId:   g.NodeId,
+		NodeName: g.NodeName,
+		Node:     g,
 	}
 }
