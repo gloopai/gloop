@@ -18,6 +18,11 @@ type Proxy struct {
 	Node     *Node
 }
 
+// RestGetAuth 获取 Rest 模块的认证组件
+func (p *Proxy) RestGetAuth() *auth.Auth {
+	return p.Node.api.Auth
+}
+
 // AddRestRouter 添加 REST 路由
 func (p *Proxy) RestAddRoute(pattern string, handlerFunc http.HandlerFunc) {
 	p.Node.api.AddRoute(pattern, handlerFunc)
