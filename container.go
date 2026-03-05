@@ -177,19 +177,19 @@ func (c *Container) doPrintFrameworkInfo() {
 	if c.rest != nil {
 		infos = append(infos, fmt.Sprintf("Node ID: %s", c.rest.NodeId))
 		infos = append(infos, fmt.Sprintf("Node Name: %s", c.rest.NodeName))
-		if c.rest != nil {
-			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.rest.GetServiceListen()))
-			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.rest.GetServiceAddr()))
-			if c.Config.Rest.Mysql.DSN != "" {
-				infos = append(infos, fmt.Sprintf("Mysql: %v", true))
-				if c.Config.Rest.Redis.Addr != "" {
-					infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Rest.Redis.Addr))
-				}
-			}
-			if c.Config.Rest.Port != 0 {
-				infos = append(infos, fmt.Sprintf("Rest Port: %d", c.Config.Rest.Port))
-			}
+		infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.rest.GetServiceListen()))
+		infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.rest.GetServiceAddr()))
+		if c.Config.Rest.Mysql.DSN != "" {
+			infos = append(infos, fmt.Sprintf("Mysql: %v", true))
+
 		}
+		if c.Config.Rest.Redis.Addr != "" {
+			infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Rest.Redis.Addr))
+		}
+		if c.Config.Rest.Port != 0 {
+			infos = append(infos, fmt.Sprintf("Rest Port: %d", c.Config.Rest.Port))
+		}
+
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))

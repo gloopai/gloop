@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 	"github.com/gloopai/gloop/schema"
 )
 
-type Rest struct {
+type Api struct {
 	component.Base
-	Config RestOptions    // 站点配置
+	Config ApiOptions     // 站点配置
 	mux    *http.ServeMux // HTTP 路由器
 
 	// 在 Rest 结构中添加 RouteCommandMap
@@ -24,7 +24,7 @@ type Rest struct {
 }
 
 // 初始化日志记录器
-func NewRest(proxy *Proxy) *Rest {
+func NewApi(proxy *Proxy) *Api {
 	auth := auth.NewAuth(
 		&auth.Proxy{
 			Options: auth.AuthOptions{
@@ -36,7 +36,7 @@ func NewRest(proxy *Proxy) *Rest {
 			},
 			Mysql: proxy.Mysql,
 		})
-	return &Rest{
+	return &Api{
 		Config:          *proxy.Options,
 		RouteCommandMap: NewRouteCommandManager(),
 		Auth:            auth,
@@ -44,11 +44,11 @@ func NewRest(proxy *Proxy) *Rest {
 	}
 }
 
-func (s *Rest) Name() string {
-	return "rest"
+func (s *Api) Name() string {
+	return "api"
 }
 
-func (s *Rest) Init() {
+func (s *Api) Init() {
 	if s.Config.Id == "" {
 		s.Config.Id = lib.Generate.Guid()
 	}
@@ -63,8 +63,8 @@ func (s *Rest) Init() {
 	}
 }
 
-// 修改 Start 方法以在 Rest 级别初始化 mux
-func (s *Rest) Start() error {
+// 修改 Start 方法以在 Api 级别初始化 mux
+func (s *Api) Start() error {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
@@ -101,7 +101,7 @@ func (s *Rest) Start() error {
 //	rest.AddRoute("/hello", func(w http.ResponseWriter, r *http.Request) {
 //	    w.Write([]byte("Hello, World!"))
 //	})
-func (s *Rest) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
+func (s *Api) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 	defer func() {
 		if r := recover(); r != nil {
 			lib.Log.Errorf("AddRoute panic: %v\n", r)
@@ -133,7 +133,7 @@ func (s *Rest) AddRoute(pattern string, handlerFunc http.HandlerFunc) {
 //	    "data": {},
 //	    "traceId": "uuid"
 //	}
-func (s *Rest) AddPayloadRoute(pattern string) {
+func (s *Api) AddPayloadRoute(pattern string) {
 	defer func() {
 		if r := recover(); r != nil {
 			lib.Log.Errorf("AddPayloadRoute panic: %v\n", r)
@@ -159,7 +159,7 @@ func (s *Rest) AddPayloadRoute(pattern string) {
 //
 // 请求格式和响应格式与 AddPayloadRoute 相同。
 // 如果身份验证失败，将返回 401 状态码。
-func (s *Rest) AddPayloadRouteWithAuth(pattern string) {
+func (s *Api) AddPayloadRouteWithAuth(pattern string) {
 	defer func() {
 		if r := recover(); r != nil {
 			lib.Log.Errorf("AddPayloadRouteWithAuth panic: %v\n", r)
@@ -217,7 +217,7 @@ func (s *Rest) AddPayloadRouteWithAuth(pattern string) {
 //
 // 该辅助函数处理 JSON 请求的解析、验证和路由分发。
 // 它设置 CORS 头，解析请求体，并根据 command 字段调用相应的处理器。
-func (s *Rest) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *schema.RequestAuth) {
+func (s *Api) handlePayloadRequest(w http.ResponseWriter, r *http.Request, pattern string, auth *schema.RequestAuth) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -286,13 +286,13 @@ func (s *Rest) handlePayloadRequest(w http.ResponseWriter, r *http.Request, patt
 //	    "traceId": "uuid"
 //	}
 
-func (s *Rest) RegisterCommand(route string, command string, handler func(ctx context.Context, payload *schema.Request) schema.Response) {
+func (s *Api) RegisterCommand(route string, command string, handler func(ctx context.Context, payload *schema.Request) schema.Response) {
 	key := fmt.Sprintf("%s:%s", route, command)
 	s.RouteCommandMap.Store(key, handler)
 }
 
 // GetBindAddresses 返回当前 HTTP 服务器绑定的 IP 和端口列表
-func (s *Rest) GetBindAddresses() []string {
+func (s *Api) GetBindAddresses() []string {
 	addresses := make([]string, 0)
 
 	protocol := "http"
@@ -312,7 +312,7 @@ func (s *Rest) GetBindAddresses() []string {
 	return addresses
 }
 
-func (s *Rest) Proxy() *Proxy {
+func (s *Api) Proxy() *Proxy {
 	return &Proxy{
 		Rest: s,
 		Auth: s.Auth,

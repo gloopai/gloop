@@ -20,27 +20,27 @@ type Proxy struct {
 
 // AddRestRouter 添加 REST 路由
 func (p *Proxy) RestAddRoute(pattern string, handlerFunc http.HandlerFunc) {
-	p.Node.rest.AddRoute(pattern, handlerFunc)
+	p.Node.api.AddRoute(pattern, handlerFunc)
 }
 
 // AddRestPayloadRoute 添加处理 JSON 请求体的 REST 路由
 func (p *Proxy) RestAddPayloadRoute(pattern string) {
-	p.Node.rest.AddPayloadRoute(pattern)
+	p.Node.api.AddPayloadRoute(pattern)
 }
 
 // AddRestRouterWithAuth 添加带认证的 REST 路由
 func (p *Proxy) RestAddPayloadRouteWithAuth(pattern string) {
-	p.Node.rest.AddPayloadRouteWithAuth(pattern)
+	p.Node.api.AddPayloadRouteWithAuth(pattern)
 }
 
 // RegisterRestRouteCommand 注册 REST 路由命令
 func (p *Proxy) RestRegisterRouteCommand(route string, command string, handler func(ctx context.Context, payload *schema.Request) schema.Response) {
-	p.Node.rest.RegisterCommand(route, command, handler)
+	p.Node.api.RegisterCommand(route, command, handler)
 }
 
-// GetRestAuth 获取 REST 模块的认证组件
-func (p *Proxy) RestGetAuth() *auth.Auth {
-	return p.Node.rest.Auth
+// GetApiAuth 获取 API 模块的认证组件
+func (p *Proxy) ApiGetAuth() *auth.Auth {
+	return p.Node.api.Auth
 }
 
 // EventTrigger 触发事件

@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"github.com/gloopai/gloop/modules/auth"
@@ -6,17 +6,17 @@ import (
 )
 
 type Proxy struct {
-	Rest    *Rest
+	Rest    *Api
 	Auth    *auth.Auth
-	Options *RestOptions
+	Options *ApiOptions
 	Mysql   *pkg.MysqlClient
 }
 
-func NewProxy(rest *Rest) *Proxy {
+func NewProxy(api *Api) *Proxy {
 	return &Proxy{
-		Rest:    rest,
-		Auth:    rest.Auth,
-		Options: &rest.Config,
-		Mysql:   rest.proxy.Mysql,
+		Rest:    api,
+		Auth:    api.Auth,
+		Options: &api.Config,
+		Mysql:   api.proxy.Mysql,
 	}
 }

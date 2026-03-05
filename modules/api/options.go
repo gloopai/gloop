@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"github.com/gloopai/gloop/lib"
@@ -10,18 +10,18 @@ type SiteAuthOption struct {
 	Jwt              auth.JWTOptions `json:"jwt"`                // JWT
 }
 
-// RestOptions 保存 Rest 的配置
-type RestOptions struct {
+// ApiOptions 保存 Api 的配置
+type ApiOptions struct {
 	Id   string `json:"id"`   // 站点 ID
 	Port int    `json:"port"` // 端口号
-	// 在 RestOptions 中添加 CrossOrigin 配置项
+	// 在 ApiOptions 中添加 CrossOrigin 配置项
 	CrossOrigin bool `json:"cross_origin"` // 是否启用跨域
 	/// Auth 模块配置
 	Auth SiteAuthOption `json:"auth"`
 }
 
-func DefaultOptions() RestOptions {
-	return RestOptions{
+func DefaultOptions() ApiOptions {
+	return ApiOptions{
 		Id:   lib.Generate.Guid(),
 		Port: 8080,
 		Auth: SiteAuthOption{

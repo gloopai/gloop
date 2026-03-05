@@ -6,8 +6,9 @@ import (
 
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
+	"github.com/gloopai/gloop/modules/api"
+	rest "github.com/gloopai/gloop/modules/api"
 	"github.com/gloopai/gloop/modules/pkg"
-	"github.com/gloopai/gloop/modules/rest"
 	"github.com/gloopai/gloop/registry/consul"
 	ggrpc "github.com/gloopai/gloop/transport/grpc"
 	"google.golang.org/grpc"
@@ -24,7 +25,7 @@ type Node struct {
 	rdb         *pkg.RedisClient
 	mysql       *pkg.MysqlClient
 	nsq         *pkg.NsqClient
-	rest        *rest.Rest
+	api         *api.Api
 }
 
 type RestOptions struct {
@@ -79,8 +80,8 @@ func NewNode(config *RestOptions) *Node {
 	node.nsq = nsqClient
 
 	if node.Config.Port != 0 {
-		node.rest = rest.NewRest(&rest.Proxy{
-			Options: &rest.RestOptions{
+		node.api = api.NewApi(&api.Proxy{
+			Options: &api.ApiOptions{
 				Port: node.Config.Port,
 				Auth: node.Config.Auth,
 			},
@@ -115,8 +116,8 @@ func (g *Node) Init() {
 		g.nsq.Init()
 	}
 
-	if g.rest != nil {
-		g.rest.Init()
+	if g.api != nil {
+		g.api.Init()
 	}
 
 	// 初始化注册中心
@@ -137,8 +138,8 @@ func (g *Node) Start() error {
 		g.nsq.Start()
 	}
 
-	if g.rest != nil {
-		g.rest.Start()
+	if g.api != nil {
+		g.api.Start()
 	}
 
 	// 启动 gRPC 服务并注册到注册中心
@@ -160,8 +161,8 @@ func (g *Node) Close() {
 		g.nsq.Close()
 	}
 
-	if g.rest != nil {
-		g.rest.Close()
+	if g.api != nil {
+		g.api.Close()
 	}
 
 	g.transporter.Stop()
@@ -178,8 +179,8 @@ func (g *Node) Destroy() {
 		g.nsq.Destroy()
 	}
 
-	if g.rest != nil {
-		g.rest.Destroy()
+	if g.api != nil {
+		g.api.Destroy()
 	}
 
 	lib.Log.Infof("Node %s is destroyed", g.Config.Id)
@@ -237,11 +238,11 @@ func (g *Node) GetNsq() (*pkg.NsqClient, error) {
 	return g.nsq, nil
 }
 
-func (g *Node) GetRest() (*rest.Rest, error) {
-	if g.rest == nil {
-		return nil, fmt.Errorf("rest is not initialized")
+func (g *Node) GetApi() (*api.Api, error) {
+	if g.api == nil {
+		return nil, fmt.Errorf("api is not initialized")
 	}
-	return g.rest, nil
+	return g.api, nil
 }
 
 // Proxy 获取节点的代理对象
