@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	"github.com/gloopai/gloop/cluster/gate"
+	"github.com/gloopai/gloop/cluster/rest"
 	"github.com/gloopai/gloop/component"
 	"github.com/gloopai/gloop/events"
 	"github.com/gloopai/gloop/lib"
@@ -16,20 +16,20 @@ import (
 )
 
 type ContainerProxy struct {
-	Gate *gate.Node
+	Rest *rest.Node
 }
 
 type Container struct {
 	Config     *ContainerConfig
 	components []component.Component
 	events     *events.EventBus
-	gate       *gate.Node
+	rest       *rest.Node
 }
 
 type ContainerConfig struct {
 	LogLevel lib.LogLevel
 	Debug    bool
-	Gate     gate.GateOptions
+	Rest     rest.RestOptions
 }
 
 // NewContainer 创建一个容器
@@ -46,9 +46,9 @@ func NewContainer() *Container {
 		Config: config,
 		events: events.NewEventBus(),
 	}
-	// 初始化 Gate 组件
-	c.gate = gate.NewNode(&config.Gate)
-	c.gate.UseEvents(c.events) // 注入事件总线
+	// 初始化 Rest 组件
+	c.rest = rest.NewNode(&config.Rest)
+	c.rest.UseEvents(c.events) // 注入事件总线
 
 	return c
 }
@@ -90,8 +90,8 @@ func (c *Container) Serve() {
 
 // 初始化 container 默认组件
 func (c *Container) initDefaultComponents() {
-	if c.gate != nil {
-		c.gate.Init()
+	if c.rest != nil {
+		c.rest.Init()
 	}
 }
 
@@ -124,8 +124,8 @@ func (c *Container) doRegisterComponents() {
 
 // 启动 container 默认组件
 func (c *Container) startDefaultComponents() {
-	if c.gate != nil {
-		c.gate.Start()
+	if c.rest != nil {
+		c.rest.Start()
 	}
 }
 
@@ -148,9 +148,9 @@ func (c *Container) doStartComponents() {
 
 // 销毁 container 默认组件
 func (c *Container) destroyDefaultComponents() {
-	if c.gate != nil {
-		c.gate.Close()
-		c.gate.Destroy()
+	if c.rest != nil {
+		c.rest.Close()
+		c.rest.Destroy()
 	}
 }
 
@@ -174,32 +174,32 @@ func (c *Container) doPrintFrameworkInfo() {
 	modules.PrintFrameworkInfo()
 
 	infos := make([]string, 0, 7)
-	if c.gate != nil {
-		infos = append(infos, fmt.Sprintf("Node ID: %s", c.gate.NodeId))
-		infos = append(infos, fmt.Sprintf("Node Name: %s", c.gate.NodeName))
-		if c.gate != nil {
-			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.gate.GetServiceListen()))
-			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.gate.GetServiceAddr()))
+	if c.rest != nil {
+		infos = append(infos, fmt.Sprintf("Node ID: %s", c.rest.NodeId))
+		infos = append(infos, fmt.Sprintf("Node Name: %s", c.rest.NodeName))
+		if c.rest != nil {
+			infos = append(infos, fmt.Sprintf("gRPC Listen: %s", c.rest.GetServiceListen()))
+			infos = append(infos, fmt.Sprintf("gRPC Expose: %s", c.rest.GetServiceAddr()))
+			if c.Config.Rest.Mysql.DSN != "" {
+				infos = append(infos, fmt.Sprintf("Mysql: %v", true))
+				if c.Config.Rest.Redis.Addr != "" {
+					infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Rest.Redis.Addr))
+				}
+			}
+			if c.Config.Rest.Port != 0 {
+				infos = append(infos, fmt.Sprintf("Rest Port: %d", c.Config.Rest.Port))
+			}
 		}
 	}
 	infos = append(infos, fmt.Sprintf("Debug: %v", c.Config.Debug))
 	infos = append(infos, fmt.Sprintf("LogLevel: %v", c.Config.LogLevel))
-	if c.Config.Gate.Mysql.DSN != "" {
-		infos = append(infos, fmt.Sprintf("Mysql: %v", true))
-	}
-	if c.Config.Gate.Redis.Addr != "" {
-		infos = append(infos, fmt.Sprintf("Redis: %s", c.Config.Gate.Redis.Addr))
-	}
 
-	if c.Config.Gate.Rest.Port != 0 {
-		infos = append(infos, fmt.Sprintf("Rest Port: %d", c.Config.Gate.Rest.Port))
-	}
 	modules.PrintBoxInfo("Container", infos...)
 }
 
 // Proxy 获取容器的代理对象
 func (c *Container) Proxy() *ContainerProxy {
 	return &ContainerProxy{
-		Gate: c.gate,
+		Rest: c.rest,
 	}
 }
