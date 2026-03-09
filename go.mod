@@ -66,6 +66,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/redis/go-redis/v9 v9.18.0
+	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/sync v0.19.0
 	google.golang.org/grpc v1.79.1
 	gorm.io/driver/mysql v1.6.0
